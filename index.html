@@ -429,6 +429,30 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
             <option value="weekly">Haftalık</option>
             <option value="monthly" selected>Aylık</option>
           </select>
+          <!-- Installment / limited repeat -->
+          <div style="margin-top:10px">
+            <div class="field-label">Tekrar Sayısı</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+              <select class="field-input field-select" id="f-occurrences" style="flex:1" onchange="S.onOccurrencesChange()">
+                <option value="0">Süresiz (sonsuza kadar)</option>
+                <option value="2">2 kez</option>
+                <option value="3">3 kez</option>
+                <option value="4">4 kez</option>
+                <option value="5">5 kez</option>
+                <option value="6">6 kez (6 taksit)</option>
+                <option value="9">9 kez</option>
+                <option value="10">10 kez</option>
+                <option value="12">12 kez (1 yıl)</option>
+                <option value="18">18 kez</option>
+                <option value="24">24 kez (2 yıl)</option>
+                <option value="custom">Özel sayı…</option>
+              </select>
+            </div>
+            <input class="field-input" id="f-occurrences-custom" type="number" min="1" max="120"
+              placeholder="Kaç kez tekrarlansın?" autocomplete="off"
+              style="margin-top:8px;display:none"/>
+            <div id="occurrences-hint" style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5"></div>
+          </div>
         </div>
         <button class="save-btn exp-btn" id="save-btn" onclick="S.save()">Gideri Kaydet</button>
         <button class="delete-btn" id="delete-btn" onclick="S.deleteCurrent()" style="display:none">İşlemi Sil</button>
@@ -611,6 +635,7 @@ function upsertTemplate(tx){
     freq: tx.freq,
     dayOfMonth: isNaN(dayOfMonth)?1:Math.min(dayOfMonth,28),
     startDate: tx.date,
+    occurrences: (Number.isFinite(tx.occurrences)&&tx.occurrences>0) ? tx.occurrences : 0, // 0 = infinite
     active: true,
   };
   if(existing){
@@ -652,14 +677,20 @@ function processRecurring(){
     if(r.freq==='monthly'){
       const start=new Date(r.startDate+'T12:00:00');
       let y=start.getFullYear(), m=start.getMonth()+1;
+      // occurrences: 0 = infinite, N = generate at most N instances total
+      const maxOcc = (r.occurrences&&r.occurrences>0) ? r.occurrences : 999;
+      let generated=0;
       // Safety: don't generate more than 120 months (10 years)
       let guard=0;
-      while((y<CY||(y===CY&&m<=CM))&&guard<120){
+      while((y<CY||(y===CY&&m<=CM))&&guard<120&&generated<maxOcc){
         guard++;
         const daysInM=new Date(y,m,0).getDate();
         const instanceDate=ds(y,m,Math.min(r.dayOfMonth,daysInM));
         const key=r.id+'|M|'+mStr(y,m);
-        if(!existingKeys.has(key)&&instanceDate<=today){
+        // Count all existing instances for this template (to track occurrences)
+        if(existingKeys.has(key)){
+          generated++; // already generated, still counts toward limit
+        } else if(instanceDate<=today){
           TXS.push({
             id:gid(), recurringId:r.id,
             type:r.type, amt:r.amt, cat:r.cat, sub:r.sub,
@@ -668,9 +699,18 @@ function processRecurring(){
             recurring:true, freq:'monthly'
           });
           existingKeys.add(key);
+          generated++;
           changed=true;
+        } else {
+          // Future date — still counts toward occurrence limit tracking
+          generated++;
         }
         m++; if(m>12){m=1;y++;}
+      }
+      // Auto-deactivate template when occurrences exhausted
+      if(maxOcc<999&&generated>=maxOcc&&r.active){
+        REC_TEMPLATES=REC_TEMPLATES.map(t=>t.id===r.id?{...t,active:false}:t);
+        changed=true;
       }
     }
     // ── Weekly ───────────────────────────────────────────────────────────────
@@ -797,6 +837,7 @@ function normalizeTx(t){
     recurring:   isRec,
     recurringId: recId,
     freq:        freq,
+    occurrences: Number.isFinite(t.occurrences)&&t.occurrences>0 ? t.occurrences : 0,
   };
 }
 
@@ -838,15 +879,27 @@ function txRowHTML(tx){
   const c=gc(tx.cat);
   const accColor=ACCOUNT_COLORS[tx.account]||'#9CA3AF';
   const accLabel=(ACCOUNTS[tx.account]||'').split(' ')[1]||'';
+  // Build recurring badge — show instalment progress if limited
+  let recBadge='';
+  if(tx.recurring){
+    const tmpl=tx.recurringId?REC_TEMPLATES.find(r=>r.id===tx.recurringId):null;
+    if(tmpl&&tmpl.occurrences>0){
+      // Count how many instances of this series exist so far
+      const done=TXS.filter(t=>t.recurringId===tx.recurringId).length;
+      recBadge=`<div class="tx-recurring-badge">↻ ${done}/${tmpl.occurrences}</div>`;
+    } else {
+      recBadge='<div class="tx-recurring-badge">↻</div>';
+    }
+  }
   return `<div class="tx-item" data-id="${tx.id}">
-    ${tx.recurring?'<div class="tx-recurring-badge">↻</div>':''}
+    ${recBadge}
     <div class="tx-icon" style="background:${c.bg}">${c.icon}</div>
     <div class="tx-body">
       <div class="tx-name">${tx.desc}</div>
       <div class="tx-meta">
         <span>${c.name}</span><div class="tx-meta-dot"></div><span>${tx.sub}</span>
-        ${accLabel?`<div class="tx-meta-dot"></div><span class="tx-account-badge" style="background:${accColor}22;color:${accColor}">${accLabel}</span>`:''}
-        ${tx.note?`<div class="tx-meta-dot"></div><span style="font-style:italic;opacity:.8">${tx.note}</span>`:''}
+        ${accLabel?('<div class="tx-meta-dot"></div><span class="tx-account-badge" style="background:'+accColor+'22;color:'+accColor+'">'+accLabel+'</span>'):''}
+        ${tx.note?('<div class="tx-meta-dot"></div><span style="font-style:italic;opacity:.8">'+tx.note+'</span>'):''}
       </div>
     </div>
     <div class="tx-right">
@@ -1919,9 +1972,31 @@ const S=(()=>{
     const tog=document.getElementById('recurring-toggle'),freq=document.getElementById('freq-select');
     tog.className='toggle'+(isRecurring?' on':'');
     freq.className='freq-select'+(isRecurring?' show':'');
+    if(isRecurring) updateOccurrencesHint();
+  }
+
+  function updateOccurrencesHint(){
+    const sel=document.getElementById('f-occurrences');
+    const custom=document.getElementById('f-occurrences-custom');
+    const hint=document.getElementById('occurrences-hint');
+    if(!sel||!hint) return;
+    const val=sel.value;
+    custom.style.display=(val==='custom')?'block':'none';
+    const freq=document.getElementById('f-freq')?.value||'monthly';
+    const freqLabel={daily:'gün',weekly:'hafta',monthly:'ay'}[freq]||'tekrar';
+    if(val==='0'){
+      hint.textContent='Siz durdurana kadar her '+freqLabel+' tekrarlar.';
+    } else if(val==='custom'){
+      const n=parseInt(custom.value)||'?';
+      hint.textContent=n+' '+freqLabel+' boyunca tekrarlar, sonra durur.';
+    } else {
+      const amt=document.getElementById('amt-display')?.textContent||'';
+      hint.textContent=val+' '+freqLabel+' boyunca tekrarlar, sonra otomatik durur.';
+    }
   }
 
   return {
+    onOccurrencesChange(){ updateOccurrencesHint(); },
     open(presetCat,presetType,preAmt,preDesc,preSub){
       editId=null;isRecurring=false;
       type=presetType||'expense';cat=presetCat||'food';
@@ -1932,6 +2007,10 @@ const S=(()=>{
       document.getElementById('f-note').value='';
       document.getElementById('f-account').value='bank';
       document.getElementById('f-freq').value='monthly';
+      document.getElementById('f-occurrences').value='0';
+      document.getElementById('f-occurrences-custom').value='';
+      document.getElementById('f-occurrences-custom').style.display='none';
+      document.getElementById('occurrences-hint').textContent='';
       document.getElementById('delete-btn').style.display='none';
       buildNumpad();updateToggle();buildCatGrid();
       if(preSub){setTimeout(()=>{const ss=document.getElementById('f-subcat');if(ss)ss.value=preSub;},50);}
@@ -1948,6 +2027,14 @@ const S=(()=>{
       document.getElementById('f-note').value=tx.note||'';
       document.getElementById('f-account').value=tx.account||'bank';
       document.getElementById('f-freq').value=tx.freq||'monthly';
+      // Restore occurrences from template if available
+      const tmpl=tx.recurringId?REC_TEMPLATES.find(r=>r.id===tx.recurringId):null;
+      const occ=tmpl&&tmpl.occurrences>0?String(tmpl.occurrences):'0';
+      const occSel=document.getElementById('f-occurrences');
+      const knownVals=['0','2','3','4','5','6','9','10','12','18','24'];
+      if(knownVals.includes(occ)){occSel.value=occ;}
+      else if(occ!=='0'){occSel.value='custom';document.getElementById('f-occurrences-custom').value=occ;document.getElementById('f-occurrences-custom').style.display='block';}
+      else{occSel.value='0';}
       document.getElementById('delete-btn').style.display='block';
       buildNumpad();updateToggle();buildCatGrid();
       setTimeout(()=>{const ss=document.getElementById('f-subcat');if(ss)ss.value=tx.sub;},50);
@@ -1973,6 +2060,15 @@ const S=(()=>{
       const note=document.getElementById('f-note').value.trim();
       const account=document.getElementById('f-account').value;
       const freq=document.getElementById('f-freq').value;
+      // Read occurrences
+      const occSel=document.getElementById('f-occurrences').value;
+      let occurrences=0;
+      if(occSel==='custom'){
+        const cv=parseInt(document.getElementById('f-occurrences-custom').value);
+        occurrences=(Number.isFinite(cv)&&cv>0)?cv:0;
+      } else {
+        occurrences=parseInt(occSel)||0;
+      }
 
       // Validation
       if(!Number.isFinite(amt)||amt<=0){
@@ -2001,7 +2097,8 @@ const S=(()=>{
         type,amt,cat,sub,desc,date,note,account,
         recurring:isRecurring,
         recurringId:isRecurring?recurringId:null,
-        freq:isRecurring?freq:''
+        freq:isRecurring?freq:'',
+        occurrences:isRecurring?occurrences:0,
       };
 
       if(editId){
