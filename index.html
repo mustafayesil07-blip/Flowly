@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ledger — Personal Finance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.8.0/Recharts.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-base: #0c0c0f;
+      --bg-surface: #16161c;
+      --bg-raised: #1e1e26;
+      --bg-hover: #26262f;
+      --accent: #f59e0b;
+      --accent-dim: rgba(245,158,11,0.15);
+      --positive: #34d399;
+      --positive-dim: rgba(52,211,153,0.12);
+      --negative: #f87171;
+      --negative-dim: rgba(248,113,113,0.12);
+      --neutral: #818cf8;
+      --text-1: #f0f0f2;
+      --text-2: #9090a0;
+      --text-3: #4a4a5a;
+      --border: rgba(255,255,255,0.07);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    html, body, #root { height: 100%; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--text-3); border-radius: 99px; }
+    .mono { font-family: var(--font-mono); }
+    .display { font-family: var(--font-display); }
+    button { cursor: pointer; font-family: var(--font-body); border: none; outline: none; }
+    input, select, textarea { font-family: var(--font-body); outline: none; }
+    .page-enter { animation: fadeUp 0.25s ease forwards; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
+} = Recharts;
+
+const { useState, useMemo, useCallback } = React;
+
+/* ── CATEGORIES ── */
+const CATEGORIES = [
+  { id: "housing",       name: "Housing",      icon: "🏠", color: "#818cf8", type: "expense" },
+  { id: "food",          name: "Food",          icon: "🍔", color: "#fb923c", type: "expense" },
+  { id: "transport",     name: "Transport",     icon: "🚗", color: "#38bdf8", type: "expense" },
+  { id: "health",        name: "Health",        icon: "🏥", color: "#34d399", type: "expense" },
+  { id: "entertainment", name: "Entertainment", icon: "🎬", color: "#e879f9", type: "expense" },
+  { id: "shopping",      name: "Shopping",      icon: "🛍️", color: "#facc15", type: "expense" },
+  { id: "utilities",     name: "Utilities",     icon: "💡", color: "#94a3b8", type: "expense" },
+  { id: "salary",        name: "Salary",        icon: "💼", color: "#34d399", type: "income"  },
+  { id: "freelance",     name: "Freelance",     icon: "💻", color: "#a3e635", type: "income"  },
+  { id: "investment",    name: "Investment",    icon: "📈", color: "#f59e0b", type: "income"  },
+];
+
+/* ── SEED DATA ── */
+function genId() { return Math.random().toString(36).slice(2, 10); }
+function makeTx(date, type, amount, category, description, payee) {
+  return { id: genId(), date, type, amount, category, description, payee, tags: [], notes: "" };
+}
+
+const now = new Date();
+const yr = now.getFullYear();
+const mo = String(now.getMonth() + 1).padStart(2, "0");
+const pm = now.getMonth() === 0 ? `${yr - 1}-12` : `${yr}-${String(now.getMonth()).padStart(2, "0")}`;
+
+const SEED_TRANSACTIONS = [
+  makeTx(`${yr}-${mo}-01`, "income",  4800, "salary",        "Monthly Salary",       "Acme Corp"),
+  makeTx(`${yr}-${mo}-01`, "expense", 1650, "housing",       "Rent Payment",         "Landlord LLC"),
+  makeTx(`${yr}-${mo}-02`, "expense",   87, "food",          "Weekly Groceries",     "Whole Foods"),
+  makeTx(`${yr}-${mo}-03`, "expense",   34, "transport",     "Uber to Airport",      "Uber"),
+  makeTx(`${yr}-${mo}-04`, "expense",   15, "entertainment", "Netflix Subscription", "Netflix"),
+  makeTx(`${yr}-${mo}-05`, "expense",   62, "food",          "Dinner with clients",  "Nobu"),
+  makeTx(`${yr}-${mo}-06`, "income",   750, "freelance",     "Design contract",      "StartupXYZ"),
+  makeTx(`${yr}-${mo}-07`, "expense",  120, "shopping",      "New shoes",            "Nike Store"),
+  makeTx(`${yr}-${mo}-08`, "expense",   49, "utilities",     "Internet bill",        "Comcast"),
+  makeTx(`${yr}-${mo}-09`, "expense",   38, "food",          "Coffee & snacks",      "Blue Bottle"),
+  makeTx(`${yr}-${mo}-10`, "expense",   90, "health",        "Gym membership",       "Equinox"),
+  makeTx(`${yr}-${mo}-11`, "expense",   22, "transport",     "Monthly transit pass", "MTA"),
+  makeTx(`${yr}-${mo}-12`, "expense",  210, "shopping",      "Electronics",          "Best Buy"),
+  makeTx(`${yr}-${mo}-13`, "expense",   45, "entertainment", "Concert tickets",      "Ticketmaster"),
+  makeTx(`${yr}-${mo}-14`, "income",   200, "investment",    "Dividend payout",      "Vanguard"),
+  makeTx(`${yr}-${mo}-15`, "expense",   73, "food",          "Groceries",            "Trader Joe's"),
+  makeTx(`${yr}-${mo}-16`, "expense",  180, "health",        "Dental checkup",       "Dr. Smith"),
+  makeTx(`${yr}-${mo}-17`, "expense",   28, "transport",     "Gas station",          "Shell"),
+  makeTx(`${yr}-${mo}-18`, "expense",   55, "entertainment", "Spotify + Hulu",       "Streaming"),
+  makeTx(`${yr}-${mo}-19`, "expense",   95, "food",          "Team lunch",           "Chipotle"),
+  makeTx(`${pm}-01`,        "income",  4800, "salary",        "Monthly Salary",      "Acme Corp"),
+  makeTx(`${pm}-03`,        "expense", 1650, "housing",       "Rent Payment",        "Landlord LLC"),
+  makeTx(`${pm}-05`,        "expense",   95, "food",          "Groceries",           "Whole Foods"),
+  makeTx(`${pm}-08`,        "expense",   42, "transport",     "Rideshare",           "Lyft"),
+  makeTx(`${pm}-10`,        "income",   500, "freelance",     "Logo design",         "Client B"),
+  makeTx(`${pm}-12`,        "expense",  145, "shopping",      "Clothing",            "Zara"),
+  makeTx(`${pm}-15`,        "expense",   80, "utilities",     "Electricity",         "ConEd"),
+  makeTx(`${pm}-18`,        "expense",   35, "entertainment", "Movie night",         "AMC"),
+  makeTx(`${pm}-20`,        "expense",   90, "health",        "Gym",                 "Equinox"),
+  makeTx(`${pm}-22`,        "expense",   65, "food",          "Dinner out",          "Carbone"),
+  makeTx(`${pm}-25`,        "income",   300, "investment",    "Dividends",           "Fidelity"),
+];
+
+const SEED_BUDGETS = [
+  { id: genId(), categoryId: "housing",       month: `${yr}-${mo}`, limit: 1700 },
+  { id: genId(), categoryId: "food",          month: `${yr}-${mo}`, limit: 400  },
+  { id: genId(), categoryId: "transport",     month: `${yr}-${mo}`, limit: 150  },
+  { id: genId(), categoryId: "health",        month: `${yr}-${mo}`, limit: 200  },
+  { id: genId(), categoryId: "entertainment", month: `${yr}-${mo}`, limit: 100  },
+  { id: genId(), categoryId: "shopping",      month: `${yr}-${mo}`, limit: 250  },
+  { id: genId(), categoryId: "utilities",     month: `${yr}-${mo}`, limit: 120  },
+];
+
+/* ── HELPERS ── */
+const fmt = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.abs(n));
+const fmtDate = (s) => new Date(s + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+function getCat(id) { return CATEGORIES.find(c => c.id === id) || { name: id, icon: "•", color: "#666" }; }
+
+function filterTx(txs, filters) {
+  return txs.filter(tx => {
+    if (filters.type && filters.type !== "all" && tx.type !== filters.type) return false;
+    if (filters.category && filters.category !== "all" && tx.category !== filters.category) return false;
+    if (filters.month && !tx.date.startsWith(filters.month)) return false;
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      if (![tx.description, tx.payee, tx.notes].some(s => s?.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  });
+}
+
+/* ── UI PRIMITIVES ── */
+const Card = ({ children, style = {}, onClick }) => (
+  <div onClick={onClick} style={{
+    background: "var(--bg-surface)", border: "1px solid var(--border)",
+    borderRadius: "var(--radius-lg)", padding: "20px",
+    transition: "border-color 0.2s", ...(onClick ? { cursor: "pointer" } : {}), ...style
+  }}>{children}</div>
+);
+
+const Badge = ({ children, color = "var(--text-2)", bg = "var(--bg-raised)" }) => (
+  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 500, color, background: bg }}>{children}</span>
+);
+
+const Pill = ({ active, onClick, children }) => (
+  <button onClick={onClick} style={{
+    padding: "5px 14px", borderRadius: 99, fontSize: 12, fontWeight: 500,
+    background: active ? "var(--accent)" : "var(--bg-raised)",
+    color: active ? "#000" : "var(--text-2)",
+    border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+    transition: "all 0.15s",
+  }}>{children}</button>
+);
+
+const Inp = ({ style = {}, ...props }) => (
+  <input style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-1)", padding: "8px 12px", fontSize: 13, width: "100%", ...style }} {...props} />
+);
+
+const Sel = ({ style = {}, children, ...props }) => (
+  <select style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-1)", padding: "8px 12px", fontSize: 13, ...style }} {...props}>{children}</select>
+);
+
+const AmtTxt = ({ amount, type }) => (
+  <span className="mono" style={{ fontWeight: 600, fontSize: 13, color: type === "income" ? "var(--positive)" : "var(--negative)" }}>
+    {type === "income" ? "+" : "−"}{fmt(amount)}
+  </span>
+);
+
+/* ── MODAL ── */
+const Modal = ({ open, onClose, title, children }) => {
+  if (!open) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", width: 480, maxWidth: "95vw", padding: 28, animation: "fadeUp 0.2s ease forwards" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h2 className="display" style={{ fontSize: 18 }}>{title}</h2>
+          <button onClick={onClose} style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", color: "var(--text-2)", borderRadius: "var(--radius-sm)", width: 30, height: 30, fontSize: 18 }}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+/* ── TX FORM ── */
+const TxForm = ({ onSave, onClose }) => {
+  const today = `${yr}-${mo}-${String(now.getDate()).padStart(2,"0")}`;
+  const [form, setForm] = useState({ type: "expense", amount: "", date: today, category: "food", description: "", payee: "" });
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+  const cats = CATEGORIES.filter(c => c.type === form.type || c.type === "both");
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", gap: 8 }}>
+        {["expense","income"].map(t => (
+          <Pill key={t} active={form.type === t} onClick={() => setForm(f => ({ ...f, type: t, category: t === "income" ? "salary" : "food" }))}>{t === "expense" ? "↑ Expense" : "↓ Income"}</Pill>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <label style={{ fontSize: 11, color: "var(--text-2)", display: "block", marginBottom: 4 }}>AMOUNT</label>
+          <Inp type="number" placeholder="0.00" value={form.amount} onChange={set("amount")} style={{ fontFamily: "var(--font-mono)" }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 11, color: "var(--text-2)", display: "block", marginBottom: 4 }}>DATE</label>
+          <Inp type="date" value={form.date} onChange={set("date")} />
+        </div>
+      </div>
+      <div>
+        <label style={{ fontSize: 11, color: "var(--text-2)", display: "block", marginBottom: 4 }}>CATEGORY</label>
+        <Sel value={form.category} onChange={set("category")} style={{ width: "100%" }}>
+          {cats.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+        </Sel>
+      </div>
+      <div>
+        <label style={{ fontSize: 11, color: "var(--text-2)", display: "block", marginBottom: 4 }}>DESCRIPTION</label>
+        <Inp placeholder="What was this for?" value={form.description} onChange={set("description")} />
+      </div>
+      <div>
+        <label style={{ fontSize: 11, color: "var(--text-2)", display: "block", marginBottom: 4 }}>PAYEE / SOURCE</label>
+        <Inp placeholder="Who paid / received?" value={form.payee} onChange={set("payee")} />
+      </div>
+      <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+        <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-sm)", background: "var(--bg-raised)", color: "var(--text-2)", border: "1px solid var(--border)", fontSize: 13 }}>Cancel</button>
+        <button onClick={() => { if (form.amount && form.description) onSave(form); }} style={{ flex: 2, padding: "10px 0", borderRadius: "var(--radius-sm)", background: "var(--accent)", color: "#000", fontWeight: 600, fontSize: 13 }}>Save Transaction</button>
+      </div>
+    </div>
+  );
+};
+
+/* ── SIDEBAR ── */
+const NAV = [
+  { id: "dashboard",    icon: "◈", label: "Dashboard"    },
+  { id: "transactions", icon: "⇌", label: "Transactions" },
+  { id: "budget",       icon: "◎", label: "Budget"       },
+  { id: "analytics",    icon: "∿", label: "Analytics"    },
+];
+
+const Sidebar = ({ page, setPage }) => (
+  <aside style={{ width: 210, minHeight: "100vh", background: "var(--bg-surface)", borderRight: "1px solid var(--border)", padding: "24px 0", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+    <div style={{ padding: "0 20px 28px" }}>
+      <div className="display" style={{ fontSize: 20, letterSpacing: "-0.02em", color: "var(--accent)" }}>◈ Ledger</div>
+      <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 2, letterSpacing: "0.08em" }}>PERSONAL FINANCE</div>
+    </div>
+    <nav style={{ flex: 1 }}>
+      {NAV.map(n => (
+        <button key={n.id} onClick={() => setPage(n.id)} style={{
+          display: "flex", alignItems: "center", gap: 12,
+          width: "100%", padding: "10px 20px", textAlign: "left",
+          background: page === n.id ? "var(--accent-dim)" : "transparent",
+          color: page === n.id ? "var(--accent)" : "var(--text-2)",
+          borderLeft: `3px solid ${page === n.id ? "var(--accent)" : "transparent"}`,
+          fontSize: 13, fontWeight: page === n.id ? 500 : 400, transition: "all 0.15s",
+        }}>
+          <span style={{ fontSize: 16 }}>{n.icon}</span>{n.label}
+        </button>
+      ))}
+    </nav>
+    <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border)" }}>
+      <div style={{ fontSize: 10, color: "var(--text-3)", marginBottom: 4, letterSpacing: "0.06em" }}>THIS MONTH</div>
+      <div className="mono" style={{ fontSize: 11, color: "var(--text-2)" }}>
+        {now.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+      </div>
+    </div>
+  </aside>
+);
+
+/* ── DASHBOARD ── */
+const Dashboard = ({ transactions, budgets, onAddTx }) => {
+  const curMonth = `${yr}-${mo}`;
+  const curTxs = transactions.filter(t => t.date.startsWith(curMonth));
+  const totalIncome  = curTxs.filter(t => t.type === "income").reduce((s,t)=>s+t.amount,0);
+  const totalExpense = curTxs.filter(t => t.type === "expense").reduce((s,t)=>s+t.amount,0);
+  const netBalance   = totalIncome - totalExpense;
+  const savingsRate  = totalIncome > 0 ? Math.round((netBalance/totalIncome)*100) : 0;
+
+  const byCat = {};
+  curTxs.filter(t=>t.type==="expense").forEach(t => { byCat[t.category]=(byCat[t.category]||0)+t.amount; });
+  const catData = Object.entries(byCat).map(([id,amt])=>{ const c=getCat(id); return { name:c.name, value:amt, color:c.color, icon:c.icon }; }).sort((a,b)=>b.value-a.value);
+
+  const budgetStatus = budgets.map(b => {
+    const spent = curTxs.filter(t=>t.type==="expense"&&t.category===b.categoryId).reduce((s,t)=>s+t.amount,0);
+    const pct = Math.min((spent/b.limit)*100,100);
+    const cat = getCat(b.categoryId);
+    return { ...b, spent, pct, cat, status: pct>=100?"over":pct>=80?"warn":"ok" };
+  });
+
+  const trendData = Array.from({length:6},(_,i)=>{
+    const d = new Date(yr, now.getMonth()-5+i, 1);
+    const mStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    const mTxs = transactions.filter(t=>t.date.startsWith(mStr));
+    return {
+      month: d.toLocaleDateString("en-US",{month:"short"}),
+      income: mTxs.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0),
+      expense: mTxs.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0),
+    };
+  });
+
+  const recent = [...transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+
+  return (
+    <div className="page-enter" style={{ padding:"28px 32px", overflowY:"auto", flex:1 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:28 }}>
+        <div>
+          <h1 className="display" style={{ fontSize:26, letterSpacing:"-0.03em" }}>Dashboard</h1>
+          <p style={{ color:"var(--text-2)", fontSize:13, marginTop:2 }}>{now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}</p>
+        </div>
+        <button onClick={onAddTx} style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 18px", background:"var(--accent)", color:"#000", fontWeight:600, fontSize:13, borderRadius:"var(--radius-md)" }}>+ Add Transaction</button>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16, marginBottom:20 }}>
+        {[
+          { label:"Net Balance",   value:fmt(netBalance),   color:netBalance>=0?"var(--positive)":"var(--negative)", sub:"this month" },
+          { label:"Income",        value:fmt(totalIncome),  color:"var(--positive)", sub:`${curTxs.filter(t=>t.type==="income").length} transactions` },
+          { label:"Expenses",      value:fmt(totalExpense), color:"var(--negative)", sub:`${curTxs.filter(t=>t.type==="expense").length} transactions` },
+          { label:"Savings Rate",  value:`${savingsRate}%`, color:"var(--accent)",   sub:"of income saved" },
+        ].map(k=>(
+          <Card key={k.label}>
+            <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:8 }}>{k.label.toUpperCase()}</div>
+            <div className="mono display" style={{ fontSize:24, fontWeight:700, color:k.color, letterSpacing:"-0.02em" }}>{k.value}</div>
+            <div style={{ fontSize:11, color:"var(--text-3)", marginTop:4 }}>{k.sub}</div>
+          </Card>
+        ))}
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:16, marginBottom:16 }}>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:16 }}>INCOME vs EXPENSES — 6 MONTHS</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={trendData} barGap={4}>
+              <XAxis dataKey="month" tick={{fill:"var(--text-3)",fontSize:11}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fill:"var(--text-3)",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v/1000}k`}/>
+              <Tooltip contentStyle={{background:"var(--bg-raised)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text-1)",fontSize:12}} formatter={v=>fmt(v)}/>
+              <Bar dataKey="income"  fill="var(--positive)" radius={[4,4,0,0]} opacity={0.85}/>
+              <Bar dataKey="expense" fill="var(--negative)" radius={[4,4,0,0]} opacity={0.85}/>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:10 }}>SPENDING BY CATEGORY</div>
+          {catData.length>0 ? (
+            <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+              <ResponsiveContainer width={110} height={110}>
+                <PieChart>
+                  <Pie data={catData} innerRadius={32} outerRadius={52} dataKey="value" paddingAngle={2}>
+                    {catData.map((d,i)=><Cell key={i} fill={d.color}/>)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ flex:1, display:"flex", flexDirection:"column", gap:5 }}>
+                {catData.slice(0,5).map(d=>(
+                  <div key={d.name} style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"var(--text-2)" }}>
+                      <div style={{ width:6, height:6, borderRadius:"50%", background:d.color }}/>
+                      {d.icon} {d.name}
+                    </div>
+                    <span className="mono" style={{ fontSize:11, color:"var(--text-1)" }}>{fmt(d.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : <div style={{ color:"var(--text-3)", textAlign:"center", padding:"30px 0", fontSize:13 }}>No expenses this month</div>}
+        </Card>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1.2fr", gap:16 }}>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:14 }}>BUDGET STATUS</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {budgetStatus.map(b=>(
+              <div key={b.id}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4, fontSize:12 }}>
+                  <span style={{ color:"var(--text-2)" }}>{b.cat.icon} {b.cat.name}</span>
+                  <span className="mono" style={{ color:b.status==="over"?"var(--negative)":b.status==="warn"?"var(--accent)":"var(--text-2)" }}>{fmt(b.spent)} / {fmt(b.limit)}</span>
+                </div>
+                <div style={{ height:4, background:"var(--bg-raised)", borderRadius:99, overflow:"hidden" }}>
+                  <div style={{ height:"100%", borderRadius:99, width:`${b.pct}%`, background:b.status==="over"?"var(--negative)":b.status==="warn"?"var(--accent)":"var(--positive)", transition:"width 0.6s ease" }}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:14 }}>RECENT TRANSACTIONS</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+            {recent.map(tx=>{
+              const cat=getCat(tx.category);
+              return (
+                <div key={tx.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"8px 10px", borderRadius:"var(--radius-sm)", background:"var(--bg-raised)" }}>
+                  <div style={{ width:32, height:32, borderRadius:"var(--radius-sm)", background:cat.color+"22", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, flexShrink:0 }}>{cat.icon}</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:12, color:"var(--text-1)", fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{tx.description}</div>
+                    <div style={{ fontSize:10, color:"var(--text-3)" }}>{tx.payee} · {fmtDate(tx.date)}</div>
+                  </div>
+                  <AmtTxt amount={tx.amount} type={tx.type}/>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+/* ── TRANSACTIONS ── */
+const Transactions = ({ transactions, onAdd, onDelete }) => {
+  const [filters, setFilters] = useState({ type:"all", category:"all", month:`${yr}-${mo}`, search:"" });
+  const [addOpen, setAddOpen] = useState(false);
+  const setF = k => v => setFilters(f=>({...f,[k]:v}));
+
+  const filtered = useMemo(()=>{
+    return filterTx(transactions, filters).sort((a,b)=>b.date.localeCompare(a.date));
+  },[transactions,filters]);
+
+  const net = filtered.reduce((s,t)=>s+(t.type==="income"?t.amount:-t.amount),0);
+
+  return (
+    <div className="page-enter" style={{ padding:"28px 32px", overflowY:"auto", flex:1 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24 }}>
+        <div>
+          <h1 className="display" style={{ fontSize:26, letterSpacing:"-0.03em" }}>Transactions</h1>
+          <p style={{ color:"var(--text-2)", fontSize:13, marginTop:2 }}>
+            {filtered.length} results · Net: <span className="mono" style={{ color:net>=0?"var(--positive)":"var(--negative)" }}>{net>=0?"+":"−"}{fmt(net)}</span>
+          </p>
+        </div>
+        <button onClick={()=>setAddOpen(true)} style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 18px", background:"var(--accent)", color:"#000", fontWeight:600, fontSize:13, borderRadius:"var(--radius-md)" }}>+ Add Transaction</button>
+      </div>
+
+      <Card style={{ marginBottom:16 }}>
+        <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
+          <Inp placeholder="Search..." value={filters.search} onChange={e=>setF("search")(e.target.value)} style={{ width:200 }}/>
+          <Inp type="month" value={filters.month} onChange={e=>setF("month")(e.target.value)} style={{ width:160 }}/>
+          <Sel value={filters.type} onChange={e=>setF("type")(e.target.value)} style={{ width:130 }}>
+            <option value="all">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </Sel>
+          <Sel value={filters.category} onChange={e=>setF("category")(e.target.value)} style={{ width:160 }}>
+            <option value="all">All Categories</option>
+            {CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+          </Sel>
+        </div>
+      </Card>
+
+      <Card style={{ padding:0, overflow:"hidden" }}>
+        <table style={{ width:"100%", borderCollapse:"collapse" }}>
+          <thead>
+            <tr style={{ borderBottom:"1px solid var(--border)" }}>
+              {["Date","Description","Category","Payee","Type","Amount",""].map(h=>(
+                <th key={h} style={{ padding:"12px 16px", textAlign:"left", fontSize:10, color:"var(--text-3)", letterSpacing:"0.08em", fontWeight:500 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length===0 ? (
+              <tr><td colSpan={7} style={{ textAlign:"center", padding:40, color:"var(--text-3)" }}>No transactions found</td></tr>
+            ) : filtered.map(tx=>{
+              const cat=getCat(tx.category);
+              return (
+                <tr key={tx.id} style={{ borderBottom:"1px solid var(--border)" }}
+                  onMouseEnter={e=>e.currentTarget.style.background="var(--bg-hover)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <td className="mono" style={{ padding:"12px 16px", fontSize:12, color:"var(--text-2)" }}>{fmtDate(tx.date)}</td>
+                  <td style={{ padding:"12px 16px", fontSize:13, maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{tx.description}</td>
+                  <td style={{ padding:"12px 16px" }}><Badge color={cat.color} bg={cat.color+"18"}>{cat.icon} {cat.name}</Badge></td>
+                  <td style={{ padding:"12px 16px", fontSize:12, color:"var(--text-2)" }}>{tx.payee}</td>
+                  <td style={{ padding:"12px 16px" }}><Badge color={tx.type==="income"?"var(--positive)":"var(--negative)"} bg={tx.type==="income"?"var(--positive-dim)":"var(--negative-dim)"}>{tx.type}</Badge></td>
+                  <td style={{ padding:"12px 16px" }}><AmtTxt amount={tx.amount} type={tx.type}/></td>
+                  <td style={{ padding:"12px 16px" }}>
+                    <button onClick={()=>onDelete(tx.id)} style={{ background:"transparent", color:"var(--text-3)", fontSize:18, padding:"2px 6px" }}
+                      onMouseEnter={e=>e.currentTarget.style.color="var(--negative)"}
+                      onMouseLeave={e=>e.currentTarget.style.color="var(--text-3)"}>×</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+
+      <Modal open={addOpen} onClose={()=>setAddOpen(false)} title="Add Transaction">
+        <TxForm onSave={tx=>{onAdd(tx);setAddOpen(false);}} onClose={()=>setAddOpen(false)}/>
+      </Modal>
+    </div>
+  );
+};
+
+/* ── BUDGET ── */
+const Budget = ({ transactions, budgets, onSaveBudget }) => {
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({ categoryId:"food", limit:"" });
+  const curMonth = `${yr}-${mo}`;
+  const curTxs = transactions.filter(t=>t.date.startsWith(curMonth));
+
+  const rows = CATEGORIES.filter(c=>c.type==="expense").map(cat=>{
+    const budget = budgets.find(b=>b.categoryId===cat.id&&b.month===curMonth);
+    const spent = curTxs.filter(t=>t.type==="expense"&&t.category===cat.id).reduce((s,t)=>s+t.amount,0);
+    const limit = budget?.limit||0;
+    const pct = limit>0?Math.min((spent/limit)*100,100):0;
+    const status = limit===0?"none":pct>=100?"over":pct>=80?"warn":"ok";
+    return { cat, spent, limit, pct, status };
+  });
+
+  const totalSpent = rows.reduce((s,r)=>s+r.spent,0);
+  const totalBudget = rows.reduce((s,r)=>s+r.limit,0);
+
+  return (
+    <div className="page-enter" style={{ padding:"28px 32px", overflowY:"auto", flex:1 }}>
+      <div style={{ marginBottom:24 }}>
+        <h1 className="display" style={{ fontSize:26, letterSpacing:"-0.03em" }}>Budget</h1>
+        <p style={{ color:"var(--text-2)", fontSize:13, marginTop:2 }}>
+          {now.toLocaleDateString("en-US",{month:"long",year:"numeric"})} · <span className="mono">{fmt(totalSpent)}</span> of <span className="mono">{fmt(totalBudget)}</span> spent
+        </p>
+      </div>
+
+      {totalBudget>0&&(
+        <Card style={{ marginBottom:20 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8, fontSize:12 }}>
+            <span style={{ color:"var(--text-2)" }}>Total Monthly Budget</span>
+            <span className="mono" style={{ color:"var(--text-1)" }}>{Math.round((totalSpent/totalBudget)*100)}% used</span>
+          </div>
+          <div style={{ height:8, background:"var(--bg-raised)", borderRadius:99, overflow:"hidden" }}>
+            <div style={{ height:"100%", borderRadius:99, width:`${Math.min((totalSpent/totalBudget)*100,100)}%`, background:totalSpent>totalBudget?"var(--negative)":"var(--accent)", transition:"width 0.8s ease" }}/>
+          </div>
+        </Card>
+      )}
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+        {rows.map(r=>(
+          <Card key={r.cat.id} onClick={()=>{setForm({categoryId:r.cat.id,limit:r.limit||""});setModal("budget");}}
+            style={{ borderColor:r.status==="over"?"var(--negative)":r.status==="warn"?"var(--accent)":"var(--border)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+              <div>
+                <div style={{ fontSize:20, marginBottom:4 }}>{r.cat.icon}</div>
+                <div style={{ fontSize:13, fontWeight:500 }}>{r.cat.name}</div>
+              </div>
+              {r.status==="over"&&<Badge color="var(--negative)" bg="var(--negative-dim)">Over</Badge>}
+              {r.status==="warn"&&<Badge color="var(--accent)" bg="var(--accent-dim)">Almost</Badge>}
+              {r.status==="ok"&&<Badge color="var(--positive)" bg="var(--positive-dim)">OK</Badge>}
+              {r.status==="none"&&<Badge>No budget</Badge>}
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8, fontSize:12 }}>
+              <span className="mono" style={{ color:r.status==="over"?"var(--negative)":"var(--text-1)" }}>{fmt(r.spent)}</span>
+              <span className="mono" style={{ color:"var(--text-3)" }}>{r.limit>0?`/ ${fmt(r.limit)}`:"set limit →"}</span>
+            </div>
+            <div style={{ height:5, background:"var(--bg-base)", borderRadius:99, overflow:"hidden" }}>
+              <div style={{ height:"100%", borderRadius:99, width:`${r.pct}%`, background:r.status==="over"?"var(--negative)":r.status==="warn"?"var(--accent)":r.cat.color, transition:"width 0.7s ease" }}/>
+            </div>
+            {r.limit>0&&<div style={{ fontSize:10, color:"var(--text-3)", marginTop:6 }}>{r.limit-r.spent>0?`${fmt(r.limit-r.spent)} remaining`:`${fmt(r.spent-r.limit)} over limit`}</div>}
+          </Card>
+        ))}
+      </div>
+
+      <Modal open={modal==="budget"} onClose={()=>setModal(null)} title="Set Budget">
+        <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          <div>
+            <label style={{ fontSize:11, color:"var(--text-2)", display:"block", marginBottom:4 }}>CATEGORY</label>
+            <Sel value={form.categoryId} onChange={e=>setForm(f=>({...f,categoryId:e.target.value}))} style={{ width:"100%" }}>
+              {CATEGORIES.filter(c=>c.type==="expense").map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+            </Sel>
+          </div>
+          <div>
+            <label style={{ fontSize:11, color:"var(--text-2)", display:"block", marginBottom:4 }}>MONTHLY LIMIT ($)</label>
+            <Inp type="number" value={form.limit} onChange={e=>setForm(f=>({...f,limit:e.target.value}))} placeholder="0" style={{ fontFamily:"var(--font-mono)" }}/>
+          </div>
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={()=>setModal(null)} style={{ flex:1, padding:"10px 0", borderRadius:"var(--radius-sm)", background:"var(--bg-raised)", color:"var(--text-2)", border:"1px solid var(--border)", fontSize:13 }}>Cancel</button>
+            <button onClick={()=>{onSaveBudget({categoryId:form.categoryId,limit:parseFloat(form.limit),month:curMonth});setModal(null);}} style={{ flex:2, padding:"10px 0", borderRadius:"var(--radius-sm)", background:"var(--accent)", color:"#000", fontWeight:600, fontSize:13 }}>Save Budget</button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+/* ── ANALYTICS ── */
+const Analytics = ({ transactions }) => {
+  const monthlyData = Array.from({length:6},(_,i)=>{
+    const d = new Date(yr, now.getMonth()-5+i, 1);
+    const mStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    const mTxs = transactions.filter(t=>t.date.startsWith(mStr));
+    const income  = mTxs.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
+    const expense = mTxs.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
+    return { month:d.toLocaleDateString("en-US",{month:"short"}), income, expense, savings:income>0?Math.round(((income-expense)/income)*100):0 };
+  });
+
+  const catTotals = {};
+  transactions.filter(t=>t.type==="expense").forEach(t=>{catTotals[t.category]=(catTotals[t.category]||0)+t.amount;});
+  const catData = Object.entries(catTotals).map(([id,v])=>{const c=getCat(id);return{name:c.name,value:v,color:c.color,icon:c.icon};}).sort((a,b)=>b.value-a.value);
+
+  const payeeTotals = {};
+  transactions.filter(t=>t.type==="expense").forEach(t=>{payeeTotals[t.payee]=(payeeTotals[t.payee]||0)+t.amount;});
+  const topPayees = Object.entries(payeeTotals).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([name,value])=>({name,value}));
+
+  const dowTotals = Array(7).fill(0), dowCount = Array(7).fill(0);
+  transactions.filter(t=>t.type==="expense").forEach(t=>{const d=new Date(t.date+"T12:00:00").getDay();dowTotals[d]+=t.amount;dowCount[d]++;});
+  const dowData = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((day,i)=>({day,avg:dowCount[i]>0?Math.round(dowTotals[i]/dowCount[i]):0}));
+  const maxDow = Math.max(...dowData.map(d=>d.avg));
+
+  const TT = ({active,payload,label})=>{
+    if(!active||!payload?.length) return null;
+    return <div style={{background:"var(--bg-raised)",border:"1px solid var(--border)",borderRadius:8,padding:"10px 14px",fontSize:12,color:"var(--text-1)"}}>
+      <div style={{fontWeight:600,marginBottom:4}}>{label}</div>
+      {payload.map((p,i)=><div key={i} style={{color:p.color||"var(--text-1)"}}>{p.name}: {fmt(p.value)}</div>)}
+    </div>;
+  };
+
+  return (
+    <div className="page-enter" style={{ padding:"28px 32px", overflowY:"auto", flex:1 }}>
+      <h1 className="display" style={{ fontSize:26, letterSpacing:"-0.03em", marginBottom:6 }}>Analytics</h1>
+      <p style={{ color:"var(--text-2)", fontSize:13, marginBottom:28 }}>Trends, patterns, and spending insights</p>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:16 }}>MONTHLY INCOME vs EXPENSES</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={monthlyData} barGap={4}>
+              <XAxis dataKey="month" tick={{fill:"var(--text-3)",fontSize:11}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fill:"var(--text-3)",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v/1000}k`}/>
+              <Tooltip content={<TT/>}/>
+              <Legend wrapperStyle={{fontSize:11,color:"var(--text-2)"}}/>
+              <Bar dataKey="income"  name="Income"  fill="var(--positive)" radius={[4,4,0,0]} opacity={0.85}/>
+              <Bar dataKey="expense" name="Expense" fill="var(--negative)" radius={[4,4,0,0]} opacity={0.85}/>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:16 }}>SAVINGS RATE (%)</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={monthlyData}>
+              <XAxis dataKey="month" tick={{fill:"var(--text-3)",fontSize:11}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fill:"var(--text-3)",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`${v}%`} domain={[-20,60]}/>
+              <Tooltip contentStyle={{background:"var(--bg-raised)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text-1)",fontSize:12}} formatter={v=>[`${v}%`,"Savings Rate"]}/>
+              <Line type="monotone" dataKey="savings" stroke="var(--accent)" strokeWidth={2.5} dot={{fill:"var(--accent)",r:4}}/>
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:16 }}>ALL-TIME SPENDING BREAKDOWN</div>
+          <div style={{ display:"flex", gap:20, alignItems:"center" }}>
+            <ResponsiveContainer width={140} height={140}>
+              <PieChart>
+                <Pie data={catData} innerRadius={40} outerRadius={65} dataKey="value" paddingAngle={2}>
+                  {catData.map((d,i)=><Cell key={i} fill={d.color}/>)}
+                </Pie>
+                <Tooltip contentStyle={{background:"var(--bg-raised)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} formatter={v=>fmt(v)}/>
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:6 }}>
+              {catData.map(d=>(
+                <div key={d.name} style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-2)" }}>
+                    <div style={{ width:8, height:8, borderRadius:"50%", background:d.color }}/>
+                    {d.icon} {d.name}
+                  </div>
+                  <span className="mono" style={{ fontSize:12, color:"var(--text-1)" }}>{fmt(d.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:16 }}>TOP MERCHANTS BY SPEND</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={topPayees} layout="vertical" margin={{left:0}}>
+              <XAxis type="number" tick={{fill:"var(--text-3)",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v}`}/>
+              <YAxis type="category" dataKey="name" tick={{fill:"var(--text-2)",fontSize:11}} axisLine={false} tickLine={false} width={80}/>
+              <Tooltip contentStyle={{background:"var(--bg-raised)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} formatter={v=>fmt(v)}/>
+              <Bar dataKey="value" fill="var(--accent)" radius={[0,4,4,0]} opacity={0.85}/>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
+
+      <Card>
+        <div style={{ fontSize:10, color:"var(--text-3)", letterSpacing:"0.06em", marginBottom:16 }}>AVERAGE SPEND BY DAY OF WEEK</div>
+        <ResponsiveContainer width="100%" height={140}>
+          <BarChart data={dowData}>
+            <XAxis dataKey="day" tick={{fill:"var(--text-2)",fontSize:12}} axisLine={false} tickLine={false}/>
+            <YAxis tick={{fill:"var(--text-3)",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v}`}/>
+            <Tooltip contentStyle={{background:"var(--bg-raised)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} formatter={v=>[fmt(v),"Avg spend"]}/>
+            <Bar dataKey="avg" radius={[4,4,0,0]}>
+              {dowData.map((d,i)=><Cell key={i} fill={d.avg===maxDow?"var(--accent)":"var(--neutral)"} opacity={0.8}/>)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+  );
+};
+
+/* ── APP ── */
+function App() {
+  const [page, setPage] = useState("dashboard");
+  const [transactions, setTransactions] = useState(SEED_TRANSACTIONS);
+  const [budgets, setBudgets] = useState(SEED_BUDGETS);
+  const [addOpen, setAddOpen] = useState(false);
+
+  const addTx = useCallback((form) => {
+    setTransactions(prev => [{
+      id: genId(), date: form.date, type: form.type,
+      amount: parseFloat(form.amount), category: form.category,
+      description: form.description, payee: form.payee||"", tags:[], notes:"",
+    }, ...prev]);
+  }, []);
+
+  const deleteTx = useCallback((id) => setTransactions(prev=>prev.filter(t=>t.id!==id)), []);
+
+  const saveBudget = useCallback((data) => {
+    setBudgets(prev => {
+      const ex = prev.find(b=>b.categoryId===data.categoryId&&b.month===data.month);
+      if (ex) return prev.map(b=>b.id===ex.id?{...b,limit:data.limit}:b);
+      return [...prev, {id:genId(),...data}];
+    });
+  }, []);
+
+  return (
+    <div style={{ display:"flex", height:"100vh", overflow:"hidden" }}>
+      <Sidebar page={page} setPage={setPage}/>
+      <main style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
+        {page==="dashboard"    && <Dashboard    transactions={transactions} budgets={budgets} onAddTx={()=>setAddOpen(true)}/>}
+        {page==="transactions" && <Transactions transactions={transactions} onAdd={addTx} onDelete={deleteTx}/>}
+        {page==="budget"       && <Budget       transactions={transactions} budgets={budgets} onSaveBudget={saveBudget}/>}
+        {page==="analytics"    && <Analytics    transactions={transactions}/>}
+      </main>
+      <Modal open={addOpen} onClose={()=>setAddOpen(false)} title="Add Transaction">
+        <TxForm onSave={tx=>{addTx(tx);setAddOpen(false);}} onClose={()=>setAddOpen(false)}/>
+      </Modal>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
