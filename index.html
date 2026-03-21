@@ -425,7 +425,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <div class="numpad" id="numpad"></div>
         <div style="margin-bottom:12px">
           <div class="field-label">Açıklama</div>
-          <input class="field-input" id="f-desc" placeholder="Ne için?" autocomplete="off"/>
+          <input class="field-input" id="f-desc" placeholder="İsteğe bağlı (boş bırakırsan alt kategori adı kullanılır)" autocomplete="off"/>
         </div>
         <div style="margin-bottom:12px">
           <div class="field-label">Kategori</div>
@@ -2348,10 +2348,12 @@ const S=(()=>{
     },
     save(){
       const amt=parseFloat(amtStr);
-      const desc=document.getElementById('f-desc').value.trim();
+      const rawDesc=document.getElementById('f-desc').value.trim();
       const date=document.getElementById('f-date').value;
       const subEl=document.getElementById('f-subcat');
       const sub=subEl?subEl.value||gc(cat).subs[0]||'':gc(cat).subs[0]||'';
+      // Auto-fill description if empty: use sub-category name, fallback to category name
+      const desc=rawDesc || sub || gc(cat).name;
       const note=document.getElementById('f-note').value.trim();
       const account=document.getElementById('f-account').value;
       const freq=document.getElementById('f-freq').value;
@@ -2368,9 +2370,6 @@ const S=(()=>{
       // Validation
       if(!Number.isFinite(amt)||amt<=0){
         const d=document.getElementById('amt-display');d.style.animation='shake .35s';setTimeout(()=>d.style.animation='',400);return;
-      }
-      if(!desc){
-        const di=document.getElementById('f-desc');di.focus();di.style.borderColor='var(--red)';setTimeout(()=>di.style.borderColor='',1500);return;
       }
       if(!DATE_RE.test(date)){toast('Geçersiz tarih','error');return;}
       if(!VALID_ACCOUNTS.includes(account)){toast('Geçersiz hesap','error');return;}
