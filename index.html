@@ -1012,24 +1012,41 @@ const QE_RULES=[
   {kw:['altın','gold'],cat:'savings',sub:'Altın',type:'expense',conf:'high'},
 ];
 
-// Normalize text for matching: lowercase, trim, collapse spaces
+// Normalize text for matching: lowercase, trim, collapse spaces, remove punctuation
 function normalizeText(s){ return s.toLowerCase().trim().replace(/[.,!?]/g,'').replace(/\s+/g,' '); }
+
+// Build live rules from user's CATS — called fresh each time so edits always apply.
+// Matching priority:
+//   1. Exact sub-category name match  (e.g. user typed "market", sub is "Market") → HIGH
+//   2. Sub-category name contained    → HIGH
+//   3. Category name match            → MEDIUM (less specific)
+function buildUserRules(){
+  const rules=[];
+  CATS.forEach(cat=>{
+    const type=(cat.id==='salary')?'income':'expense';
+    // Sub-category names → point to that specific sub
+    (cat.subs||[]).forEach(sub=>{
+      const kw=normalizeText(sub);
+      if(kw.length>1) rules.push({kw:[kw],cat:cat.id,sub,type,conf:'high',source:'user'});
+    });
+    // Category name itself → first sub as default
+    const catKw=normalizeText(cat.name);
+    if(catKw.length>1){
+      rules.push({kw:[catKw],cat:cat.id,sub:cat.subs[0]||'',type,conf:'med',source:'user'});
+    }
+  });
+  return rules;
+}
 
 function parseQuickEntry(raw){
   if(!raw||typeof raw!=='string') return null;
   const text=raw.trim();
   if(!text) return null;
 
-  // Extract FIRST valid number only (integer or decimal, commas allowed as thousand sep)
-  // Pattern: optional leading spaces, a number like 1200 or 1.200,50 or 1200.50
+  // ── Extract first valid number ─────────────────────────────────────────────
   const amtMatch=text.match(/\b(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)\b/);
   if(!amtMatch) return {error:'no_amount'};
-
-  // Parse amount: handle both . and , as decimal separator
-  let amtRaw=amtMatch[1];
-  // If last separator is , and only 2 digits after: treat as decimal
-  // Otherwise strip separators
-  let amt;
+  let amtRaw=amtMatch[1], amt;
   if(/[.,]\d{2}$/.test(amtRaw)&&amtRaw.replace(/[^.,]/g,'').length===1){
     amt=parseFloat(amtRaw.replace(',','.'));
   } else {
@@ -1037,44 +1054,77 @@ function parseQuickEntry(raw){
   }
   if(!Number.isFinite(amt)||amt<=0||amt>100000000) return {error:'invalid_amount'};
 
-  // Description = everything except the matched number
-  const desc=normalizeText(text.replace(amtMatch[0],'').trim()) || 'Hızlı giriş';
+  const descNorm=normalizeText(text.replace(amtMatch[0],'').trim()) || 'hızlı giriş';
+  const origDesc=text.replace(amtMatch[0],'').trim() || 'Hızlı giriş';
 
-  // Match keywords — collect ALL matching rules to detect ambiguity
+  // ── Step 1: Match against USER'S live categories (always up-to-date) ──────
+  // User rules are rebuilt every call — so any category rename/move/add is reflected immediately
+  const userRules=buildUserRules();
+  const userMatched=[];
+  for(const rule of userRules){
+    for(const kw of rule.kw){
+      // Exact match or contained in the typed description
+      if(descNorm===kw || descNorm.includes(kw)){
+        userMatched.push({...rule, exactMatch: descNorm===kw});
+        break;
+      }
+    }
+  }
+
+  // If user's categories gave us a clear answer, use it — skip QE_RULES entirely
+  if(userMatched.length>0){
+    // Prefer exact matches, then high-conf, then first found
+    userMatched.sort((a,b)=>{
+      if(a.exactMatch&&!b.exactMatch) return -1;
+      if(!a.exactMatch&&b.exactMatch) return 1;
+      if(a.conf==='high'&&b.conf!=='high') return -1;
+      if(a.conf!=='high'&&b.conf==='high') return 1;
+      return 0;
+    });
+
+    // Ambiguity check: multiple high-conf matches pointing to DIFFERENT categories
+    const highUser=userMatched.filter(r=>r.conf==='high');
+    const uniqueCats=new Set(highUser.map(r=>r.cat));
+    if(uniqueCats.size>1){
+      return {amt,desc:origDesc,cat:'other',sub:'Çeşitli',type:'expense',conf:'low',ambiguous:true};
+    }
+
+    const best=userMatched[0];
+    return {amt,desc:origDesc,cat:best.cat,sub:best.sub,type:best.type,conf:best.conf,ambiguous:false};
+  }
+
+  // ── Step 2: Fall back to built-in QE_RULES (generic keywords) ────────────
   const matched=[];
   for(const rule of QE_RULES){
     for(const kw of rule.kw){
-      if(desc.includes(kw.toLowerCase())){
+      if(descNorm.includes(kw.toLowerCase())){
         matched.push(rule);
         break;
       }
     }
   }
 
-  // Ambiguity: multiple HIGH-confidence rules with DIFFERENT categories → do not auto-save
+  // Ambiguity: multiple HIGH-confidence rules pointing to different categories
   const highMatches=matched.filter(r=>r.conf==='high');
   const uniqueHighCats=new Set(highMatches.map(r=>r.cat));
   if(uniqueHighCats.size>1){
-    // Multiple conflicting high-confidence matches → force modal
-    return {amt, desc:text.replace(amtMatch[0],'').trim()||'Hızlı giriş', cat:'other', sub:'Çeşitli', type:'expense', conf:'low', ambiguous:true};
+    return {amt,desc:origDesc,cat:'other',sub:'Çeşitli',type:'expense',conf:'low',ambiguous:true};
   }
 
   let best=null;
-  // Pick highest confidence match
   for(const rule of matched){
     if(!best) best=rule;
     else if(rule.conf==='high'&&best.conf!=='high') best=rule;
   }
 
-  const cat  =best?best.cat:'other';
-  const sub  =best?best.sub:'Çeşitli';
-  const type =best?best.type:'expense';
-  const conf =best?best.conf:'low';
-
-  // Original description (not normalized)
-  const origDesc=(text.replace(amtMatch[0],'').trim())||'Hızlı giriş';
-
-  return {amt, desc:origDesc, cat, sub, type, conf, ambiguous:false};
+  return {
+    amt, desc:origDesc,
+    cat:  best?best.cat :'other',
+    sub:  best?best.sub :'Çeşitli',
+    type: best?best.type:'expense',
+    conf: best?best.conf:'low',
+    ambiguous:false
+  };
 }
 
 // Live preview
