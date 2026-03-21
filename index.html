@@ -29,7 +29,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .page.active{display:block;animation:pgIn .2s cubic-bezier(.4,0,.2,1)}
 @keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 /* NAV */
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(28,43,42,.96);backdrop-filter:blur(20px) saturate(180%);border-top:1px solid rgba(255,255,255,.06);display:grid;grid-template-columns:repeat(4,1fr);z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(28,43,42,.96);backdrop-filter:blur(20px) saturate(180%);border-top:1px solid rgba(255,255,255,.06);display:grid;grid-template-columns:repeat(5,1fr);z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
 .nb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 4px 9px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:color .15s;position:relative;font-family:var(--font)}
 .nb svg{width:21px;height:21px;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
 .nb.active{color:var(--green)}.nb.active svg{transform:scale(1.08)}
@@ -334,6 +334,40 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .backup-btn.danger{border-color:var(--red-mid);color:var(--red)}
 .backup-btn.danger:hover{background:var(--red-light)}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+/* ── RECURRING MANAGEMENT PAGE ─────────────────── */
+.rec-page{padding:0 0 84px;min-height:100vh;display:none}
+.rec-page.active{display:block;animation:pgIn .2s ease}
+.rec-card{background:var(--card);border-radius:var(--r);margin:0 14px 10px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;transition:opacity .2s}
+.rec-card.inactive{opacity:.5;border-style:dashed}
+.rec-card-head{display:flex;align-items:center;gap:12px;padding:14px 16px 12px}
+.rec-card-icon{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.rec-card-body{flex:1;min-width:0}
+.rec-card-name{font-size:14px;font-weight:700;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-card-meta{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.5}
+.rec-card-amt{text-align:right;flex-shrink:0}
+.rec-card-amt-val{font-size:16px;font-weight:900;letter-spacing:-.02em}
+.rec-card-amt-freq{font-size:10px;font-weight:600;color:var(--text3);margin-top:1px}
+.rec-progress{padding:0 16px 12px}
+.rec-prog-track{height:6px;background:var(--bg2);border-radius:99px;overflow:hidden;margin-bottom:5px}
+.rec-prog-bar{height:100%;border-radius:99px;transition:width .6s ease}
+.rec-prog-label{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text3)}
+.rec-next{padding:10px 16px 12px;border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.rec-next-info{display:flex;flex-direction:column;gap:2px}
+.rec-next-label{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.rec-next-date{font-size:13px;font-weight:800;color:var(--text2)}
+.rec-actions{display:flex;gap:6px;flex-shrink:0}
+.rec-act-btn{padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);border:1.5px solid;transition:all .15s;white-space:nowrap}
+.rec-act-btn.simulate{background:var(--green-light);color:var(--green);border-color:var(--green-mid)}
+.rec-act-btn.simulate:hover{background:var(--green-mid)}
+.rec-act-btn.stop{background:var(--red-light);color:var(--red);border-color:var(--red-mid)}
+.rec-act-btn.restart{background:var(--blue-light);color:var(--blue);border-color:rgba(96,165,250,.3)}
+.rec-status-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle}
+.rsb-active{background:var(--green-light);color:var(--green)}
+.rsb-done{background:var(--bg2);color:var(--text3)}
+.rsb-stopped{background:var(--amber-light);color:var(--amber)}
+.sim-box{margin:0 14px 10px;padding:14px 16px;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--r);animation:pgIn .25s ease}
+.sim-box-title{font-size:13px;font-weight:800;color:var(--green);margin-bottom:6px}
+.sim-box-body{font-size:12px;color:var(--text2);line-height:1.7}
 </style>
 </head>
 <body>
@@ -342,6 +376,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   <div id="pg-tx"     class="page"></div>
   <div id="pg-stats"  class="page"></div>
   <div id="pg-budget" class="page"></div>
+  <div id="pg-rec"    class="rec-page"></div>
   <div id="pg-cats"   class="cat-editor-page"></div>
 
   <div class="toast" id="toast"></div>
@@ -363,6 +398,10 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     <button class="nb" data-pg="budget">
       <div class="nb-dot"></div>
       <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Bütçe
+    </button>
+    <button class="nb" data-pg="rec">
+      <div class="nb-dot"></div>
+      <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Düzenli
     </button>
   </nav>
 
@@ -865,12 +904,13 @@ function goPage(pg){
   document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('active',b.dataset.pg===pg));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('pg-cats').classList.remove('active');
+  document.getElementById('pg-rec').classList.remove('active');
   const el=document.getElementById('pg-'+pg);
   if(el){ el.classList.add('active'); activePg=pg; render(pg); }
 }
 document.querySelectorAll('.nb').forEach(b=>b.addEventListener('click',()=>goPage(b.dataset.pg)));
 document.getElementById('fab').addEventListener('click',()=>S.open());
-function render(pg){ ({home:renderHome,tx:renderTx,stats:renderStats,budget:renderBudget})[pg]?.(); }
+function render(pg){ ({home:renderHome,tx:renderTx,stats:renderStats,budget:renderBudget,rec:renderRec})[pg]?.(); }
 
 // ═══════════════════════════════════════════════════
 // TX ROW HTML
@@ -1641,8 +1681,263 @@ function setBgtCustomUI(catId){
 }
 
 // ═══════════════════════════════════════════════════
-// DATA EXPORT / IMPORT / BACKUP / RESET
+// RECURRING MANAGEMENT PAGE
 // ═══════════════════════════════════════════════════
+
+// Calculate the next scheduled date for a template after today
+function nextRecDate(tmpl){
+  if(!tmpl.active) return null;
+  const today=todayStr();
+  if(tmpl.freq==='monthly'){
+    // Find first month >= today that doesn't have a generated instance yet
+    let y=CY, m=CM;
+    for(let i=0;i<24;i++){
+      const key=tmpl.id+'|M|'+mStr(y,m);
+      const hasInstance=TXS.some(t=>t.recurringId===tmpl.id&&t.date.startsWith(mStr(y,m)));
+      const instanceDate=ds(y,m,Math.min(tmpl.dayOfMonth,new Date(y,m,0).getDate()));
+      if(!hasInstance&&instanceDate>today) return instanceDate;
+      if(!hasInstance&&instanceDate<=today) return instanceDate; // due today or overdue
+      m++; if(m>12){m=1;y++;}
+    }
+  }
+  if(tmpl.freq==='weekly'){
+    const startMs=new Date(tmpl.startDate+'T12:00:00').getTime();
+    const todayMs=new Date(today+'T12:00:00').getTime();
+    const weekMs=7*24*60*60*1000;
+    const elapsed=Math.ceil((todayMs-startMs)/weekMs);
+    const nextMs=startMs+(elapsed*weekMs);
+    const d=new Date(nextMs);
+    return ds(d.getFullYear(),d.getMonth()+1,d.getDate());
+  }
+  return null;
+}
+
+// Count generated instances for a template
+function instanceCount(tmplId){
+  return TXS.filter(t=>t.recurringId===tmplId).length;
+}
+
+// Simulate: what WOULD happen if today were one period ahead?
+function simulateNext(tmplId){
+  const tmpl=REC_TEMPLATES.find(r=>r.id===tmplId);
+  if(!tmpl){toast('Şablon bulunamadı','error');return;}
+
+  const count=instanceCount(tmplId);
+  const maxOcc=tmpl.occurrences>0?tmpl.occurrences:null;
+
+  if(maxOcc&&count>=maxOcc){
+    toast('Bu seri tamamlandı, yeni kayıt üretilmez.','warn');
+    return;
+  }
+
+  const c=gc(tmpl.cat);
+  let nextDate=null;
+
+  if(tmpl.freq==='monthly'){
+    // Find next month after last generated instance
+    const lastInst=TXS.filter(t=>t.recurringId===tmplId).map(t=>t.date).sort().pop();
+    let y,m;
+    if(lastInst){
+      const d=new Date(lastInst+'T12:00:00');
+      m=d.getMonth()+2; y=d.getFullYear();
+      if(m>12){m=1;y++;}
+    } else {
+      const d=new Date(tmpl.startDate+'T12:00:00');
+      m=d.getMonth()+1; y=d.getFullYear();
+    }
+    nextDate=ds(y,m,Math.min(tmpl.dayOfMonth,new Date(y,m,0).getDate()));
+  } else if(tmpl.freq==='weekly'){
+    const lastInst=TXS.filter(t=>t.recurringId===tmplId).map(t=>t.date).sort().pop();
+    const baseMs=lastInst
+      ?new Date(lastInst+'T12:00:00').getTime()
+      :new Date(tmpl.startDate+'T12:00:00').getTime();
+    const d=new Date(baseMs+7*24*60*60*1000);
+    nextDate=ds(d.getFullYear(),d.getMonth()+1,d.getDate());
+  }
+
+  if(!nextDate){toast('Sonraki tarih hesaplanamadı','error');return;}
+
+  const occLabel=maxOcc?` (${count+1}/${maxOcc})`:'';
+
+  // Show simulation result on the page
+  const simBox=document.getElementById('sim-box-'+tmplId);
+  if(simBox){
+    simBox.style.display='block';
+    simBox.innerHTML=`<div class="sim-box-title">✅ Simülasyon Sonucu</div>
+      <div class="sim-box-body">
+        <b>${fmtD(nextDate)}</b> tarihinde şu kayıt otomatik oluşturulur:<br>
+        ${c.icon} <b>${tmpl.desc}</b> — ${tmpl.type==='expense'?'Gider':'Gelir'} <b>${fmt(tmpl.amt)}</b>${occLabel}<br>
+        Hesap: ${ACCOUNTS[tmpl.account]||tmpl.account} · Kategori: ${c.name} › ${tmpl.sub}
+      </div>`;
+    simBox.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+function stopTemplate(tmplId){
+  if(!confirm('Bu düzenli işlemi durdurmak istiyor musunuz? Mevcut kayıtlar silinmez.')) return;
+  REC_TEMPLATES=REC_TEMPLATES.map(r=>r.id===tmplId?{...r,active:false}:r);
+  saveTemplates();
+  renderRec();
+  toast('Düzenli işlem durduruldu','warn');
+}
+
+function restartTemplate(tmplId){
+  REC_TEMPLATES=REC_TEMPLATES.map(r=>r.id===tmplId?{...r,active:true}:r);
+  saveTemplates();
+  processRecurring();
+  renderRec();
+  toast('Düzenli işlem yeniden başlatıldı');
+}
+
+function deleteTemplate(tmplId){
+  if(!confirm('Şablonu ve bağlı tüm otomatik kayıtları silmek istiyor musunuz?')) return;
+  TXS=TXS.filter(t=>t.recurringId!==tmplId);
+  REC_TEMPLATES=REC_TEMPLATES.filter(r=>r.id!==tmplId);
+  saveTxs(); saveTemplates();
+  renderRec();
+  toast('Düzenli işlem silindi','error');
+}
+
+function renderRec(){
+  const el=document.getElementById('pg-rec');
+  const freqLabel={monthly:'Aylık',weekly:'Haftalık',daily:'Günlük'};
+
+  if(!REC_TEMPLATES.length){
+    el.innerHTML=`
+      <div class="pg-hdr"><div class="pg-title">Düzenli İşlemler</div></div>
+      <div class="empty">
+        <div class="empty-icon">🔄</div>
+        <div class="empty-title">Henüz düzenli işlem yok</div>
+        <div class="empty-msg">İşlem eklerken "Düzenli İşlem" seçeneğini aç.<br>Kira, maaş, abonelik gibi her ay tekrar eden<br>harcamalar buraya gelir.</div>
+        <button class="empty-btn" onclick="S.open()">+ İşlem Ekle</button>
+      </div>`;
+    return;
+  }
+
+  // Separate active vs inactive
+  const active=REC_TEMPLATES.filter(r=>r.active);
+  const inactive=REC_TEMPLATES.filter(r=>!r.active);
+
+  function buildCard(tmpl){
+    const c=gc(tmpl.cat);
+    const count=instanceCount(tmpl.id);
+    const maxOcc=tmpl.occurrences>0?tmpl.occurrences:null;
+    const isDone=maxOcc&&count>=maxOcc;
+    const next=!isDone?nextRecDate(tmpl):null;
+
+    // Status badge
+    let statusBadge='';
+    if(!tmpl.active&&isDone){
+      statusBadge='<span class="rec-status-badge rsb-done">✓ Tamamlandı</span>';
+    } else if(!tmpl.active){
+      statusBadge='<span class="rec-status-badge rsb-stopped">⏸ Durduruldu</span>';
+    } else {
+      statusBadge='<span class="rec-status-badge rsb-active">● Aktif</span>';
+    }
+
+    // Progress bar (only for limited occurrences)
+    let progressHTML='';
+    if(maxOcc){
+      const pct=Math.min((count/maxOcc)*100,100);
+      const barColor=isDone?'var(--green)':pct>=80?'var(--amber)':'var(--blue)';
+      progressHTML=`<div class="rec-progress">
+        <div class="rec-prog-track"><div class="rec-prog-bar" style="width:${pct}%;background:${barColor}"></div></div>
+        <div class="rec-prog-label">
+          <span>${count} kayıt oluşturuldu</span>
+          <span>${isDone?'Tamamlandı':count+'/'+maxOcc+' taksit'}</span>
+        </div>
+      </div>`;
+    }
+
+    // Next date row + action buttons
+    let nextHTML='';
+    if(tmpl.active&&!isDone){
+      const nextLabel=next?fmtD(next):'—';
+      const isOverdue=next&&next<=todayStr();
+      nextHTML=`<div class="rec-next">
+        <div class="rec-next-info">
+          <div class="rec-next-label">Sonraki Ödeme</div>
+          <div class="rec-next-date" style="color:${isOverdue?'var(--amber)':'var(--text2)'}">${nextLabel}${isOverdue?' ⚠':''}</div>
+        </div>
+        <div class="rec-actions">
+          <button class="rec-act-btn simulate" onclick="simulateNext('${tmpl.id}')">🔍 Simüle Et</button>
+          <button class="rec-act-btn stop" onclick="stopTemplate('${tmpl.id}')">⏸ Durdur</button>
+        </div>
+      </div>`;
+    } else if(!tmpl.active&&!isDone){
+      nextHTML=`<div class="rec-next">
+        <div class="rec-next-info">
+          <div class="rec-next-label">Durum</div>
+          <div class="rec-next-date">Durduruldu</div>
+        </div>
+        <div class="rec-actions">
+          <button class="rec-act-btn restart" onclick="restartTemplate('${tmpl.id}')">▶ Devam Et</button>
+          <button class="rec-act-btn stop" onclick="deleteTemplate('${tmpl.id}')">🗑 Sil</button>
+        </div>
+      </div>`;
+    } else if(isDone){
+      nextHTML=`<div class="rec-next">
+        <div class="rec-next-info">
+          <div class="rec-next-label">Durum</div>
+          <div class="rec-next-date" style="color:var(--green)">Tüm taksitler tamamlandı</div>
+        </div>
+        <div class="rec-actions">
+          <button class="rec-act-btn stop" onclick="deleteTemplate('${tmpl.id}')">🗑 Sil</button>
+        </div>
+      </div>`;
+    }
+
+    // Summary line
+    const startFormatted=fmtD(tmpl.startDate);
+    const meta=`${freqLabel[tmpl.freq]||tmpl.freq} · Başlangıç: ${startFormatted}${maxOcc?' · '+maxOcc+' taksit':''}`;
+
+    return `<div class="rec-card${tmpl.active?'':' inactive'}" id="rec-card-${tmpl.id}">
+      <div class="rec-card-head">
+        <div class="rec-card-icon" style="background:${c.bg}">${c.icon}</div>
+        <div class="rec-card-body">
+          <div class="rec-card-name">${tmpl.desc}${statusBadge}</div>
+          <div class="rec-card-meta">${c.name} › ${tmpl.sub} · ${meta}</div>
+        </div>
+        <div class="rec-card-amt">
+          <div class="rec-card-amt-val" style="color:${tmpl.type==='income'?'var(--green)':'var(--red)'}">${tmpl.type==='income'?'+':'−'}${fmt(tmpl.amt)}</div>
+          <div class="rec-card-amt-freq">${freqLabel[tmpl.freq]||''}</div>
+        </div>
+      </div>
+      ${progressHTML}
+      ${nextHTML}
+      <div class="sim-box" id="sim-box-${tmpl.id}" style="display:none;margin:0 12px 12px"></div>
+    </div>`;
+  }
+
+  const activeHTML=active.map(buildCard).join('');
+  const inactiveHTML=inactive.length
+    ?`<div style="padding:16px 16px 8px;font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase">Tamamlanan / Durdurulan</div>${inactive.map(buildCard).join('')}`
+    :'';
+
+  // Summary stats
+  const totalMonthly=active
+    .filter(r=>r.freq==='monthly'&&r.type==='expense')
+    .reduce((s,r)=>s+r.amt,0);
+  const totalIncome=active
+    .filter(r=>r.freq==='monthly'&&r.type==='income')
+    .reduce((s,r)=>s+r.amt,0);
+
+  el.innerHTML=`
+    <div class="pg-hdr">
+      <div class="pg-title">Düzenli İşlemler</div>
+      <button class="icon-btn" onclick="S.open()" title="Yeni ekle" style="font-size:18px">+</button>
+    </div>
+
+    ${active.length?`<div class="stat-strip" style="margin-bottom:16px">
+      <div class="scard"><div class="scard-label">Aktif Seri</div><div class="scard-val">${active.length}</div></div>
+      ${totalMonthly?`<div class="scard"><div class="scard-label">Aylık Gider</div><div class="scard-val" style="color:var(--red)">${fmt(totalMonthly)}</div></div>`:''}
+      ${totalIncome?`<div class="scard"><div class="scard-label">Aylık Gelir</div><div class="scard-val" style="color:var(--green)">${fmt(totalIncome)}</div></div>`:''}
+    </div>`:''}
+
+    ${activeHTML}
+    ${inactiveHTML}
+    <div style="height:16px"></div>`;
+}
 function exportCSV(){
   const rows=[['Tarih','Tür','Tutar','Kategori','Alt Kategori','Açıklama','Hesap','Not','Düzenli']];
   [...TXS].sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>{
