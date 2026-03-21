@@ -1805,6 +1805,14 @@ function renderRec(){
   if(!REC_TEMPLATES.length){
     el.innerHTML=`
       <div class="pg-hdr"><div class="pg-title">Düzenli İşlemler</div></div>
+      <div style="padding:0 14px 14px">
+        <div class="backup-row">
+          <button class="backup-btn" onclick="exportCSV()" style="font-size:12px">📊 CSV</button>
+          <button class="backup-btn" onclick="exportJSON()" style="font-size:12px">📦 JSON Yedek</button>
+          <button class="backup-btn" onclick="document.getElementById('import-file').click()" style="font-size:12px">📥 İçe Aktar</button>
+          <button class="backup-btn danger" onclick="resetAllData()" style="font-size:12px">🗑 Sıfırla</button>
+        </div>
+      </div>
       <div class="empty">
         <div class="empty-icon">🔄</div>
         <div class="empty-title">Henüz düzenli işlem yok</div>
@@ -1926,6 +1934,15 @@ function renderRec(){
     <div class="pg-hdr">
       <div class="pg-title">Düzenli İşlemler</div>
       <button class="icon-btn" onclick="S.open()" title="Yeni ekle" style="font-size:18px">+</button>
+    </div>
+
+    <div style="padding:0 14px 14px">
+      <div class="backup-row">
+        <button class="backup-btn" onclick="exportCSV()" style="font-size:12px">📊 CSV</button>
+        <button class="backup-btn" onclick="exportJSON()" style="font-size:12px">📦 JSON Yedek</button>
+        <button class="backup-btn" onclick="document.getElementById('import-file').click()" style="font-size:12px">📥 İçe Aktar</button>
+        <button class="backup-btn danger" onclick="resetAllData()" style="font-size:12px">🗑 Sıfırla</button>
+      </div>
     </div>
 
     ${active.length?`<div class="stat-strip" style="margin-bottom:16px">
