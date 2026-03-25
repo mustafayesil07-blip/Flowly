@@ -543,6 +543,8 @@ const DB = {
 // CURRENCY — Turkish Lira
 // ═══════════════════════════════════════════════════
 // All fmt functions use ₺ throughout
+let USD_RATE = (() => { try { return parseFloat(localStorage.getItem('fina_usd_rate')) || 44; } catch(e){ return 44; } })();
+
 function fmt(n){
   const abs=Math.abs(n);
   return '₺'+abs.toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:0});
@@ -1439,6 +1441,7 @@ function renderHome(){
         <div class="home-name">Genel Bakış 👋</div>
       </div>
       <div class="pg-actions">
+        <button class="icon-btn" onclick="openUsdModal()" title="USD/TRY Kur" style="font-size:13px;font-weight:700;">$₺</button>
         <button class="icon-btn" onclick="exportCSV()" title="CSV İndir">⬇</button>
         <button class="icon-btn" onclick="openCatEditor()" title="Kategoriler" style="font-size:16px">⚙</button>
       </div>
@@ -1446,7 +1449,10 @@ function renderHome(){
 
     <div class="hero">
       <div class="hero-eyebrow">Net Bakiye · ${mName(CM)} ${CY}</div>
-      <div class="hero-balance">${net>=0?'+':''}${fmt(net)}</div>
+      <div class="hero-balance">
+        ${net>=0?'+':''}${fmt(net)}
+        <span style="font-size:16px;font-weight:500;color:rgba(255,255,255,.38);margin-left:8px;">(${net>=0?'+':'−'}$${Math.abs(net/USD_RATE).toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:0})})</span>
+      </div>
       <div class="hero-balance-sub">Tasarruf oranı: ${sr}%</div>
       <div class="hero-divider"></div>
       <div class="hero-stats">
@@ -2546,6 +2552,58 @@ document.addEventListener('keydown',e=>{
 // INIT
 // ═══════════════════════════════════════════════════
 renderHome();
+</script>
+
+<!-- USD RATE MODAL -->
+<div id="usd-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;">
+  <div style="background:#1C2B2A;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;border-top:1px solid rgba(255,255,255,.08);">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px;"></div>
+    <div style="font-size:16px;font-weight:700;color:#E8F0EF;margin-bottom:6px;">USD/TRY Kuru</div>
+    <div style="font-size:13px;color:#90ADAA;margin-bottom:20px;">Net bakiyenin USD karşılığı için kullanılır</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <div style="flex:1;position:relative;">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#90ADAA;font-size:14px;font-weight:600;">1$ =</span>
+        <input id="usd-rate-input" type="number" step="0.01" min="1"
+          style="width:100%;background:#243332;border:1.5px solid #334D4A;border-radius:12px;padding:14px 14px 14px 52px;color:#E8F0EF;font-size:18px;font-weight:700;font-family:inherit;outline:none;"
+          placeholder="44.26" oninput="previewUsd(this.value)">
+      </div>
+      <span style="color:#90ADAA;font-size:14px;">₺</span>
+    </div>
+    <div id="usd-preview" style="font-size:12px;color:#5A7874;margin-top:8px;min-height:16px;"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="closeUsdModal()" style="flex:1;padding:14px;background:rgba(255,255,255,.06);border:none;border-radius:12px;color:#90ADAA;font-size:15px;font-weight:600;cursor:pointer;">İptal</button>
+      <button onclick="saveUsdRate()" style="flex:1;padding:14px;background:#2DD4A0;border:none;border-radius:12px;color:#1C2B2A;font-size:15px;font-weight:700;cursor:pointer;">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openUsdModal(){
+  const m=document.getElementById('usd-modal');
+  document.getElementById('usd-rate-input').value = USD_RATE || '';
+  previewUsd(USD_RATE);
+  m.style.display='flex';
+}
+function closeUsdModal(){
+  document.getElementById('usd-modal').style.display='none';
+}
+function previewUsd(val){
+  const r=parseFloat(val);
+  const prev=document.getElementById('usd-preview');
+  if(!r||r<=0){ prev.textContent=''; return; }
+  prev.textContent='Örn: ₺1.000 → $'+(1000/r).toFixed(2);
+}
+function saveUsdRate(){
+  const val=parseFloat(document.getElementById('usd-rate-input').value);
+  if(!val||val<=0){ alert('Geçerli bir kur girin'); return; }
+  USD_RATE=val;
+  try{ localStorage.setItem('fina_usd_rate', val); }catch(e){}
+  closeUsdModal();
+  renderHome();
+}
+document.getElementById('usd-modal').addEventListener('click', function(e){
+  if(e.target===this) closeUsdModal();
+});
 </script>
 </body>
 </html>
