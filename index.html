@@ -12,6 +12,11 @@
 <meta name="apple-mobile-web-app-title" content="Flowly">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<script>
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/Flowly/sw.js', {scope: '/Flowly/'});
+  }
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
