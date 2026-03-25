@@ -1,4 +1,4 @@
-const CACHE = 'flowly-v1';
+const CACHE = 'flowly-v2';
 const CORE = ['/Flowly/', '/Flowly/index.html'];
 
 self.addEventListener('install', function(e) {
