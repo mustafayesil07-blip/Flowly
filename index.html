@@ -556,6 +556,7 @@ function fmt2(n){
 function fmtD(s){ return new Date(s+'T12:00:00').toLocaleDateString('tr-TR',{month:'short',day:'numeric'}); }
 function mName(m){ return new Date(2000,m-1,1).toLocaleString('tr-TR',{month:'long'}); }
 function mShort(m){ return new Date(2000,m-1,1).toLocaleString('tr-TR',{month:'short'}); }
+function escapeHTML(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ═══════════════════════════════════════════════════
 // VALIDATION LAYER
@@ -950,11 +951,11 @@ function txRowHTML(tx){
     ${recBadge}
     <div class="tx-icon" style="background:${c.bg}">${c.icon}</div>
     <div class="tx-body">
-      <div class="tx-name">${tx.desc}</div>
+      <div class="tx-name">${escapeHTML(tx.desc)}</div>
       <div class="tx-meta">
-        <span>${c.name}</span><div class="tx-meta-dot"></div><span>${tx.sub}</span>
+        <span>${escapeHTML(c.name)}</span><div class="tx-meta-dot"></div><span>${escapeHTML(tx.sub)}</span>
         ${accLabel?('<div class="tx-meta-dot"></div><span class="tx-account-badge" style="background:'+accColor+'22;color:'+accColor+'">'+accLabel+'</span>'):''}
-        ${tx.note?('<div class="tx-meta-dot"></div><span style="font-style:italic;opacity:.8">'+tx.note+'</span>'):''}
+        ${tx.note?('<div class="tx-meta-dot"></div><span style="font-style:italic;opacity:.8">'+escapeHTML(tx.note)+'</span>'):''}
       </div>
     </div>
     <div class="tx-right">
@@ -1156,8 +1157,8 @@ function qeInput(){
   preview.innerHTML=`
     <div class="qe-preview-icon" style="background:${c.bg}">${c.icon}</div>
     <div class="qe-preview-body">
-      <div class="qe-preview-desc">${p.desc}<span class="qe-confidence ${confClass}">${confLabel}${p.ambiguous?' ⚠':''}</span></div>
-      <div class="qe-preview-meta">${c.name} → ${p.sub} · ${p.type==='income'?'Gelir':'Gider'}</div>
+      <div class="qe-preview-desc">${escapeHTML(p.desc)}<span class="qe-confidence ${confClass}">${confLabel}${p.ambiguous?' ⚠':''}</span></div>
+      <div class="qe-preview-meta">${escapeHTML(c.name)} → ${escapeHTML(p.sub)} · ${p.type==='income'?'Gelir':'Gider'}</div>
     </div>
     <div class="qe-preview-amt" style="color:${p.type==='income'?'var(--green)':'var(--red)'}">${p.type==='income'?'+':'−'}${fmt(p.amt)}</div>`;
 }
@@ -1295,7 +1296,7 @@ function renderLeakCard(){
     }
 
     alerts.slice(0,4).forEach(a=>{
-      itemsHTML+=`<div class="leak-item"><div class="leak-item-icon" style="background:${a.cat.bg}">${a.cat.icon}</div><div class="leak-item-body"><div class="leak-item-name">${a.cat.name}</div><div class="leak-item-detail">${fmt(a.avg)} ort. → ${fmt(a.currAmt)}</div></div><div class="leak-item-delta" style="color:var(--red)">+${a.pctDiff}%<br><span style="font-size:10px;color:var(--text3)">+${fmt(a.absDiff)}</span></div></div>`;
+      itemsHTML+=`<div class="leak-item"><div class="leak-item-icon" style="background:${a.cat.bg}">${a.cat.icon}</div><div class="leak-item-body"><div class="leak-item-name">${escapeHTML(a.cat.name)}</div><div class="leak-item-detail">${fmt(a.avg)} ort. → ${fmt(a.currAmt)}</div></div><div class="leak-item-delta" style="color:var(--red)">+${a.pctDiff}%<br><span style="font-size:10px;color:var(--text3)">+${fmt(a.absDiff)}</span></div></div>`;
     });
   }
 
@@ -1393,17 +1394,17 @@ function renderAwarenessGrid(){
   // Biggest expense
   if(a.biggestTx){
     const c=gc(a.biggestTx.cat);
-    cards.push(`<div class="aw-card red"><span class="aw-icon">${c.icon}</span><div class="aw-val" style="color:var(--red);font-size:18px">${fmt(a.biggestTx.amt)}</div><div class="aw-label">En Büyük Gider</div><div class="aw-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.biggestTx.desc}</div></div>`);
+    cards.push(`<div class="aw-card red"><span class="aw-icon">${c.icon}</span><div class="aw-val" style="color:var(--red);font-size:18px">${fmt(a.biggestTx.amt)}</div><div class="aw-label">En Büyük Gider</div><div class="aw-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(a.biggestTx.desc)}</div></div>`);
   }
 
   // Worst category
   if(a.worstCat){
-    cards.push(`<div class="aw-card red"><span class="aw-icon">${a.worstCat.cat.icon}</span><div class="aw-val" style="color:var(--red);font-size:18px">+${fmt(a.worstCat.diff)}</div><div class="aw-label">Bütçe Aşımı</div><div class="aw-sub">${a.worstCat.cat.name}: ${fmt(a.worstCat.spent)} / ${fmt(a.worstCat.lim)}</div></div>`);
+    cards.push(`<div class="aw-card red"><span class="aw-icon">${a.worstCat.cat.icon}</span><div class="aw-val" style="color:var(--red);font-size:18px">+${fmt(a.worstCat.diff)}</div><div class="aw-label">Bütçe Aşımı</div><div class="aw-sub">${escapeHTML(a.worstCat.cat.name)}: ${fmt(a.worstCat.spent)} / ${fmt(a.worstCat.lim)}</div></div>`);
   }
 
   // Best category
   if(a.bestCat){
-    cards.push(`<div class="aw-card green"><span class="aw-icon">${a.bestCat.cat.icon}</span><div class="aw-val" style="color:var(--green);font-size:18px">${fmt(Math.abs(a.bestCat.diff))}</div><div class="aw-label">Tasarruflu Kategori</div><div class="aw-sub">${a.bestCat.cat.name}: ${fmt(a.bestCat.spent)} / ${fmt(a.bestCat.lim)}</div></div>`);
+    cards.push(`<div class="aw-card green"><span class="aw-icon">${a.bestCat.cat.icon}</span><div class="aw-val" style="color:var(--green);font-size:18px">${fmt(Math.abs(a.bestCat.diff))}</div><div class="aw-label">Tasarruflu Kategori</div><div class="aw-sub">${escapeHTML(a.bestCat.cat.name)}: ${fmt(a.bestCat.spent)} / ${fmt(a.bestCat.lim)}</div></div>`);
   }
 
   if(!cards.length) return '';
@@ -1426,7 +1427,7 @@ function renderHome(){
   const qHTML=CATS.filter(c=>c.id!=='salary').map(c=>`
     <div class="qcat" onclick="S.open('${c.id}','expense')">
       <div class="qcat-icon" style="background:${c.bg}">${c.icon}</div>
-      <div class="qcat-name">${c.name}</div>
+      <div class="qcat-name">${escapeHTML(c.name)}</div>
     </div>`).join('');
 
   const recent=[...TXS].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
@@ -1541,7 +1542,7 @@ function renderTx(){
   const activeFilters=hasActiveFilters();
 
   let catChips=`<div class="chip ${fCat==='all'?'on':'off'}" onclick="setCF('all')">Tümü</div>`;
-  usedCats.forEach(cid=>{const c=gc(cid);catChips+=`<div class="chip ${fCat===cid?'on':'off'}" onclick="setCF('${cid}')">${c.icon} ${c.name}</div>`;});
+  usedCats.forEach(cid=>{const c=gc(cid);catChips+=`<div class="chip ${fCat===cid?'on':'off'}" onclick="setCF('${cid}')">${c.icon} ${escapeHTML(c.name)}</div>`;});
 
   const el=document.getElementById('pg-tx');
   el.innerHTML=`
@@ -1629,7 +1630,7 @@ function renderStats(){
     catItems.forEach(it=>{const dash=(it.amt/exp)*circ;segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${it.cat.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="round"/>`;off+=dash;});
     donutSVG=`<svg width="130" height="130" style="flex-shrink:0;overflow:visible"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${sw}"/>${segs}<text x="${cx}" y="${cy-7}" text-anchor="middle" font-size="10" fill="var(--text3)" font-family="Geist,sans-serif" font-weight="700" letter-spacing="1">GİDER</text><text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="15" fill="var(--text)" font-family="Geist,sans-serif" font-weight="900">${fmt(exp)}</text></svg>`;
   }
-  const legendHTML=catItems.slice(0,6).map(it=>`<div class="dl-item"><div class="dl-dot" style="background:${it.cat.color}"></div><div class="dl-name">${it.cat.icon} ${it.cat.name}</div><div class="dl-right"><div class="dl-pct" style="color:${it.cat.color}">%${it.pct}</div><div class="dl-amt">${fmt(it.amt)}</div></div></div>`).join('');
+  const legendHTML=catItems.slice(0,6).map(it=>`<div class="dl-item"><div class="dl-dot" style="background:${it.cat.color}"></div><div class="dl-name">${it.cat.icon} ${escapeHTML(it.cat.name)}</div><div class="dl-right"><div class="dl-pct" style="color:${it.cat.color}">%${it.pct}</div><div class="dl-amt">${fmt(it.amt)}</div></div></div>`).join('');
 
   const trend=[];
   for(let i=5;i>=0;i--){let m=smM-i,y=smY;if(m<1){m+=12;y--;}const mt=txsFor(y,m);trend.push({label:mShort(m),inc:sumInc(mt),exp:sumExp(mt),cur:(m===smM&&y===smY)});}
@@ -1641,7 +1642,7 @@ function renderStats(){
 
   // Use budget snapshot for selected month
   const bgtSnap=getBudgetForMonth(smY,smM);
-  const catRows=catItems.map(it=>{const bgt=bgtSnap[it.id]||0,over=bgt>0&&it.amt>bgt,pct=bgt>0?Math.min(it.amt/bgt*100,100):0;return `<div class="cat-spend-item"><div class="csi-icon" style="background:${it.cat.bg}">${it.cat.icon}</div><div class="csi-body"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><div><div class="csi-name">${it.cat.name}</div><div style="font-size:10px;font-weight:700;color:var(--text3)">%${it.pct} harcama</div></div><div class="csi-right"><div class="csi-amt">−${fmt(it.amt)}</div>${bgt>0?`<div class="csi-bgt">/ ${fmt(bgt)}</div>`:''}</div></div>${bgt>0?`<div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${over?'var(--red)':it.cat.color}"></div></div>`:''}</div></div>`;}).join('');
+  const catRows=catItems.map(it=>{const bgt=bgtSnap[it.id]||0,over=bgt>0&&it.amt>bgt,pct=bgt>0?Math.min(it.amt/bgt*100,100):0;return `<div class="cat-spend-item"><div class="csi-icon" style="background:${it.cat.bg}">${it.cat.icon}</div><div class="csi-body"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><div><div class="csi-name">${escapeHTML(it.cat.name)}</div><div style="font-size:10px;font-weight:700;color:var(--text3)">%${it.pct} harcama</div></div><div class="csi-right"><div class="csi-amt">−${fmt(it.amt)}</div>${bgt>0?`<div class="csi-bgt">/ ${fmt(bgt)}</div>`:''}</div></div>${bgt>0?`<div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${over?'var(--red)':it.cat.color}"></div></div>`:''}</div></div>`;}).join('');
 
   const el=document.getElementById('pg-stats');
   el.innerHTML=`
@@ -1658,8 +1659,8 @@ function renderStats(){
       <div class="scard"><div class="scard-label">Oran</div><div class="scard-val" style="color:${sr>=20?'var(--green)':sr>=0?'var(--amber)':'var(--red)'}">%${sr}</div>${srPrev?`<div class="scard-delta" style="color:var(--text3)">geçen: %${srPrev}</div>`:''}</div>
     </div>
     <div class="insight-row">
-      ${topCat?`<div class="insight-card"><div class="ic-icon" style="background:${topCat.cat.bg}">${topCat.cat.icon}</div><div class="ic-val" style="color:${topCat.cat.color}">${fmt(topCat.amt)}</div><div class="ic-label">En yüksek kategori</div><div class="ic-delta">${topCat.cat.name} · %${topCat.pct}</div></div>`:''}
-      ${biggestTx?`<div class="insight-card"><div class="ic-icon" style="background:var(--red-light)">💸</div><div class="ic-val" style="color:var(--red)">${fmt(biggestTx.amt)}</div><div class="ic-label">En büyük gider</div><div class="ic-delta">${biggestTx.desc}</div></div>`:''}
+      ${topCat?`<div class="insight-card"><div class="ic-icon" style="background:${topCat.cat.bg}">${topCat.cat.icon}</div><div class="ic-val" style="color:${topCat.cat.color}">${fmt(topCat.amt)}</div><div class="ic-label">En yüksek kategori</div><div class="ic-delta">${escapeHTML(topCat.cat.name)} · %${topCat.pct}</div></div>`:''}
+      ${biggestTx?`<div class="insight-card"><div class="ic-icon" style="background:var(--red-light)">💸</div><div class="ic-val" style="color:var(--red)">${fmt(biggestTx.amt)}</div><div class="ic-label">En büyük gider</div><div class="ic-delta">${escapeHTML(biggestTx.desc)}</div></div>`:''}
       <div class="insight-card"><div class="ic-icon" style="background:var(--blue-light)">📅</div><div class="ic-val" style="color:var(--blue)">${fmt(avgDaily)}</div><div class="ic-label">Günlük ort. gider</div><div class="ic-delta">${daysPassed} gün izlendi</div></div>
       <div class="insight-card"><div class="ic-icon" style="background:${srDelta>=0?'var(--green-light)':'var(--red-light)'}">${srDelta>=0?'📈':'📉'}</div><div class="ic-val" style="color:${srDelta>=0?'var(--green)':'var(--red)'}">${srDelta>=0?'+':''}%${srDelta}</div><div class="ic-label">Tasarruf değişimi</div><div class="ic-delta">geçen aya göre</div></div>
       <div class="insight-card"><div class="ic-icon" style="background:var(--purple-light)">↻</div><div class="ic-val" style="color:var(--purple)">${txs.filter(t=>t.recurring).length}</div><div class="ic-label">Düzenli işlem</div><div class="ic-delta">bu ayda</div></div>
@@ -1678,6 +1679,10 @@ function chSM(d){smM+=d;if(smM>12){smM=1;smY++;}if(smM<1){smM=12;smY--;}renderSt
 function renderBudget(){
   const txs=txsFor(CY,CM);
   const bgt=getCurrentBudget();
+  // Check if current month's budget was freshly set or carried over from a previous month
+  const curKey=mStr(CY,CM);
+  const budgetIsCarryOver=!BUDGET_HISTORY[curKey]&&Object.keys(BUDGET_HISTORY).some(k=>k<curKey);
+  const carryOverFrom=budgetIsCarryOver?(()=>{const keys=Object.keys(BUDGET_HISTORY).filter(k=>k<curKey).sort();return keys.length?keys[keys.length-1]:null;})():null;
   const totalB=Object.values(bgt).reduce((s,v)=>s+v,0);
   const totalS=sumExp(txs);
   const pctTotal=totalB>0?Math.min(totalS/totalB*100,100):0;
@@ -1700,7 +1705,7 @@ function renderBudget(){
     return `<div class="bgt-card">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:${lim>0?'14px':'10px'}">
         <div style="width:44px;height:44px;border-radius:14px;background:${cat.bg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${cat.icon}</div>
-        <div style="flex:1"><div style="font-size:15px;font-weight:800;margin-bottom:3px">${cat.name}</div>${badge}</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:800;margin-bottom:3px">${escapeHTML(cat.name)}</div>${badge}</div>
         <div style="text-align:right"><div style="font-size:17px;font-weight:900;color:${spent>0?'var(--red)':'var(--text3)'}">${fmt(spent)}</div><div style="font-size:11px;color:var(--text3)">${lim>0?'/ '+fmt(lim):'limit yok'}</div></div>
       </div>
       ${lim>0?`<div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${barColor}"></div></div><div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text3);font-weight:700"><span>%${Math.round(pct)} kullanıldı</span><span style="color:${over?'var(--red)':'var(--text3)'}">${over?'−'+fmt(b.remaining)+' aşım':fmt(b.remaining)+' kaldı'}</span></div>`:''}
@@ -1716,7 +1721,7 @@ function renderBudget(){
     <div class="pg-hdr"><div class="pg-title">Bütçe</div></div>
     <div style="padding:0 14px 16px">
       <div class="hero">
-        <div class="hero-eyebrow">Aylık Bütçe · ${mName(CM)} ${CY}</div>
+        <div class="hero-eyebrow">Aylık Bütçe · ${mName(CM)} ${CY}${carryOverFrom?` · <span style="color:rgba(255,179,71,.75)">↑ ${carryOverFrom} devir</span>`:''}</div>
         <div class="hero-balance">${fmt(totalB)}</div>
         <div class="hero-balance-sub">${fmt(totalS)} harcandı · %${Math.round(pctTotal)}${overCount>0?` · <span style="color:#F87171">${overCount} aşım</span>`:''}</div>
         <div class="hero-divider"></div>
@@ -1835,8 +1840,8 @@ function simulateNext(tmplId){
     simBox.innerHTML=`<div class="sim-box-title">✅ Simülasyon Sonucu</div>
       <div class="sim-box-body">
         <b>${fmtD(nextDate)}</b> tarihinde şu kayıt otomatik oluşturulur:<br>
-        ${c.icon} <b>${tmpl.desc}</b> — ${tmpl.type==='expense'?'Gider':'Gelir'} <b>${fmt(tmpl.amt)}</b>${occLabel}<br>
-        Hesap: ${ACCOUNTS[tmpl.account]||tmpl.account} · Kategori: ${c.name} › ${tmpl.sub}
+        ${c.icon} <b>${escapeHTML(tmpl.desc)}</b> — ${tmpl.type==='expense'?'Gider':'Gelir'} <b>${fmt(tmpl.amt)}</b>${occLabel}<br>
+        Hesap: ${escapeHTML(ACCOUNTS[tmpl.account]||tmpl.account)} · Kategori: ${escapeHTML(c.name)} › ${escapeHTML(tmpl.sub)}
       </div>`;
     simBox.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
@@ -1972,8 +1977,8 @@ function renderRec(){
       <div class="rec-card-head">
         <div class="rec-card-icon" style="background:${c.bg}">${c.icon}</div>
         <div class="rec-card-body">
-          <div class="rec-card-name">${tmpl.desc}${statusBadge}</div>
-          <div class="rec-card-meta">${c.name} › ${tmpl.sub} · ${meta}</div>
+          <div class="rec-card-name">${escapeHTML(tmpl.desc)}${statusBadge}</div>
+          <div class="rec-card-meta">${escapeHTML(c.name)} › ${escapeHTML(tmpl.sub)} · ${meta}</div>
         </div>
         <div class="rec-card-amt">
           <div class="rec-card-amt-val" style="color:${tmpl.type==='income'?'var(--green)':'var(--red)'}">${tmpl.type==='income'?'+':'−'}${fmt(tmpl.amt)}</div>
@@ -2030,7 +2035,7 @@ function exportCSV(){
     rows.push([t.date,t.type===('income')?'Gelir':'Gider',t.amt,gc(t.cat).name,t.sub,`"${(t.desc||'').replace(/"/g,'""')}"`,t.account||'',`"${(t.note||'').replace(/"/g,'""')}"`,t.recurring?'Evet':'Hayır']);
   });
   const csv='\ufeff'+rows.map(r=>r.join(',')).join('\n'); // BOM for Excel
-  downloadBlob(csv,'text/csv;charset=utf-8',`fina-${todayStr()}.csv`);
+  downloadBlob(csv,'text/csv;charset=utf-8',`flowly-${todayStr()}.csv`);
   toast('CSV indirildi');
 }
 
@@ -2043,7 +2048,7 @@ function exportJSON(){
     cats:CATS,
     recTemplates:REC_TEMPLATES,
   };
-  downloadBlob(JSON.stringify(backup,null,2),'application/json',`fina-backup-${todayStr()}.json`);
+  downloadBlob(JSON.stringify(backup,null,2),'application/json',`flowly-backup-${todayStr()}.json`);
   toast('JSON yedeği indirildi');
 }
 
@@ -2154,6 +2159,7 @@ function resetAllData(){
   BUDGET_HISTORY[mStr(CY,CM)]={};
   CATS=[...DEFAULT_CATS];
   REC_TEMPLATES=[];
+  CATMAP=buildCatMap();
   saveTxs(); saveBudgetHistory(); saveCats(); saveTemplates();
   toast('Tüm veriler silindi','warn');
   render(activePg);
@@ -2177,8 +2183,8 @@ function renderCatEditorPage(){
     <div class="cat-ed-item" onclick="CatEd.openEdit('${c.id}')">
       <div class="cat-ed-icon-box" style="background:${c.bg}">${c.icon}</div>
       <div class="cat-ed-body">
-        <div class="cat-ed-name">${c.name}${c.isSystem?'':' <span style="font-size:9px;background:var(--purple-light);color:var(--purple);padding:1px 6px;border-radius:99px;font-weight:800">özel</span>'}</div>
-        <div class="cat-ed-subs">${c.subs.join(' · ')}</div>
+        <div class="cat-ed-name">${escapeHTML(c.name)}${c.isSystem?'':' <span style="font-size:9px;background:var(--purple-light);color:var(--purple);padding:1px 6px;border-radius:99px;font-weight:800">özel</span>'}</div>
+        <div class="cat-ed-subs">${c.subs.map(escapeHTML).join(' · ')}</div>
       </div>
       <div class="cat-ed-arrow">›</div>
     </div>`).join('');
@@ -2209,12 +2215,12 @@ const CatEd=(()=>{
     const c=tempCat;
     const emojiHTML=EMOJI_OPTIONS.map(e=>`<button class="emoji-btn ${c.icon===e?'sel':''}" onclick="CatEd._setIcon('${e}')">${e}</button>`).join('');
     const colorHTML=COLOR_OPTIONS.map(col=>`<button class="color-btn ${c.color===col?'sel':''}" style="background:${col}" onclick="CatEd._setColor('${col}')"></button>`).join('');
-    const subsHTML=c.subs.map((s,i)=>`<span class="sub-tag" onclick="CatEd._removeSub(${i})" title="Sil">${s} ×</span>`).join('');
+    const subsHTML=c.subs.map((s,i)=>`<span class="sub-tag" onclick="CatEd._removeSub(${i})" title="Sil">${escapeHTML(s)} ×</span>`).join('');
 
     document.getElementById('cat-modal-body').innerHTML=`
       <div style="margin-bottom:14px">
         <div class="field-label">İsim</div>
-        <input class="field-input" id="ce-name" value="${c.name||''}" placeholder="Kategori adı" maxlength="25"/>
+        <input class="field-input" id="ce-name" value="${escapeHTML(c.name||'')}" placeholder="Kategori adı" maxlength="25"/>
       </div>
       <div style="margin-bottom:14px">
         <div class="field-label">İkon</div>
