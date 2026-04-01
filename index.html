@@ -1642,7 +1642,7 @@ function renderHome(){
     <div class="hero">
       <div class="hero-eyebrow">Net Bakiye · ${mName(CM)} ${CY}</div>
       <div class="hero-balance">
-        ${net>=0?'+':''}${fmt(net)}
+        ${net>=0?'+':'−'}${fmt(net)}
         <span style="font-size:16px;font-weight:500;color:rgba(255,255,255,.38);margin-left:8px;">(${net>=0?'+':'−'}$${Math.abs(net/USD_RATE).toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:0})})</span>
       </div>
       <div class="hero-balance-sub">Tasarruf oranı: ${sr}%</div>
