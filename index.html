@@ -569,6 +569,18 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     </div>
   </div>
 
+  <!-- CAT TX DETAIL SHEET -->
+  <div class="overlay" id="cat-tx-overlay" onclick="if(event.target===this)closeCatTxSheet()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-hdr">
+        <div class="sheet-title" id="cat-tx-title"></div>
+        <button class="sheet-close" onclick="closeCatTxSheet()">✕</button>
+      </div>
+      <div class="sheet-body" id="cat-tx-body" style="padding:8px 8px 0"></div>
+    </div>
+  </div>
+
   <!-- HIDDEN FILE INPUT FOR IMPORT -->
   <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this)"/>
 </div>
@@ -1833,7 +1845,7 @@ function renderStats(){
 
   // Use budget snapshot for selected month
   const bgtSnap=getBudgetForMonth(smY,smM);
-  const catRows=catItems.map(it=>{const bgt=bgtSnap[it.id]||0,over=bgt>0&&it.amt>bgt,pct=bgt>0?Math.min(it.amt/bgt*100,100):0;return `<div class="cat-spend-item"><div class="csi-icon" style="background:${it.cat.bg}">${it.cat.icon}</div><div class="csi-body"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><div><div class="csi-name">${escapeHTML(it.cat.name)}</div><div style="font-size:10px;font-weight:700;color:var(--text3)">%${it.pct} harcama</div></div><div class="csi-right"><div class="csi-amt">−${fmt(it.amt)}</div>${bgt>0?`<div class="csi-bgt">/ ${fmt(bgt)}</div>`:''}</div></div>${bgt>0?`<div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${over?'var(--red)':it.cat.color}"></div></div>`:''}</div></div>`;}).join('');
+  const catRows=catItems.map(it=>{const bgt=bgtSnap[it.id]||0,over=bgt>0&&it.amt>bgt,pct=bgt>0?Math.min(it.amt/bgt*100,100):0;return `<div class="cat-spend-item" style="cursor:pointer" onclick="showCatTxSheet('${it.id}')"><div class="csi-icon" style="background:${it.cat.bg}">${it.cat.icon}</div><div class="csi-body"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><div><div class="csi-name">${escapeHTML(it.cat.name)}</div><div style="font-size:10px;font-weight:700;color:var(--text3)">%${it.pct} harcama</div></div><div class="csi-right"><div class="csi-amt">−${fmt(it.amt)}</div>${bgt>0?`<div class="csi-bgt">/ ${fmt(bgt)}</div>`:''}<div style="font-size:10px;color:var(--text3);margin-top:3px">›</div></div></div>${bgt>0?`<div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${over?'var(--red)':it.cat.color}"></div></div>`:''}</div></div>`;}).join('');
 
   const el=document.getElementById('pg-stats');
   el.innerHTML=`
@@ -1864,6 +1876,32 @@ function renderStats(){
 }
 function chSM(d){smM+=d;if(smM>12){smM=1;smY++;}if(smM<1){smM=12;smY--;}renderStats();}
 function chBM(d){bmM+=d;if(bmM>12){bmM=1;bmY++;}if(bmM<1){bmM=12;bmY--;}renderBudget();}
+
+function showCatTxSheet(catId){
+  const cat=gc(catId);
+  const txs=txsFor(smY,smM).filter(t=>t.type==='expense'&&t.cat===catId).sort((a,b)=>b.date.localeCompare(a.date)||b.amt-a.amt);
+  const total=txs.reduce((s,t)=>s+t.amt,0);
+  document.getElementById('cat-tx-title').innerHTML=`<span style="margin-right:8px">${cat.icon}</span>${escapeHTML(cat.name)} <span style="font-size:13px;font-weight:600;color:var(--text3);margin-left:6px">${mName(smM)}</span>`;
+  const body=document.getElementById('cat-tx-body');
+  if(!txs.length){
+    body.innerHTML=`<div class="empty" style="padding:40px 20px"><div class="empty-icon">🔍</div><div class="empty-title">İşlem yok</div></div>`;
+  } else {
+    const rows=txs.map(tx=>{
+      const cat2=gc(tx.cat);
+      return `<div class="tx-item" style="margin:0 6px 6px;cursor:pointer" onclick="S.open('${tx.id}');closeCatTxSheet()">
+        <div class="tx-icon" style="background:${cat2.bg}">${cat2.icon}</div>
+        <div class="tx-body">
+          <div class="tx-name">${escapeHTML(tx.desc||tx.sub||cat2.name)}</div>
+          <div class="tx-meta">${fmtD(tx.date)}${tx.sub?`<span class="tx-meta-dot"></span>${escapeHTML(tx.sub)}`:''}${tx.note?`<span class="tx-meta-dot"></span>${escapeHTML(tx.note)}`:''}${tx.recurring?'<span class="tx-meta-dot"></span>↻':''}</div>
+        </div>
+        <div class="tx-amount exp">−${fmt(tx.amt)}</div>
+      </div>`;
+    }).join('');
+    body.innerHTML=`<div style="padding:0 6px 10px;font-size:12px;font-weight:700;color:var(--text3)">${txs.length} işlem · Toplam: <span style="color:var(--red)">${fmt(total)}</span></div>${rows}<div style="height:8px"></div>`;
+  }
+  document.getElementById('cat-tx-overlay').classList.add('open');
+}
+function closeCatTxSheet(){document.getElementById('cat-tx-overlay').classList.remove('open');}
 
 // ═══════════════════════════════════════════════════
 // BUDGET
