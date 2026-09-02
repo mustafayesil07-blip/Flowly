@@ -546,12 +546,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
           </div>
           <div>
             <div class="field-label">Hesap</div>
-            <select class="field-input field-select" id="f-account">
-              <option value="bank">🏦 Banka</option>
-              <option value="cash">💵 Nakit</option>
-              <option value="credit">💳 Kredi</option>
-              <option value="invest">📈 Yatırım</option>
-            </select>
+            <!-- options are filled from ACCOUNTS on boot so labels live in one place -->
+            <select class="field-input field-select" id="f-account"></select>
           </div>
         </div>
         <div style="margin-bottom:4px">
@@ -755,7 +751,11 @@ function safeSub(catId, sub){
   return (c.subs&&c.subs.length>0) ? (c.subs.includes(sub)?sub:c.subs[0]) : (sub||'');
 }
 
-const ACCOUNTS      = {bank:'🏦 Banka',cash:'💵 Nakit',credit:'💳 Kredi',invest:'📈 Yatırım'};
+const ACCOUNTS      = {bank:'🏦 Banka Hesabı',cash:'💵 Nakit',credit:'💳 Kredi Kartı',invest:'📈 Yatırım'};
+// Expenses usually go on the card, income lands in the bank.
+const DEFAULT_ACCOUNT = {expense:'credit', income:'bank'};
+// Compact labels for the transaction-row badge, where the full name won't fit.
+const ACCOUNT_SHORT = {bank:'Banka',cash:'Nakit',credit:'Kart',invest:'Yatırım'};
 const ACCOUNT_COLORS= {bank:'#2E6DF0',cash:'#00A37A',credit:'#C97A09',invest:'#7748E8'};
 
 // ═══════════════════════════════════════════════════
@@ -1144,7 +1144,7 @@ function render(pg){ ({home:renderHome,tx:renderTx,stats:renderStats,budget:rend
 function txRowHTML(tx){
   const c=gc(tx.cat);
   const accColor=ACCOUNT_COLORS[tx.account]||'#6B7A78';
-  const accLabel=(ACCOUNTS[tx.account]||'').split(' ')[1]||'';
+  const accLabel=ACCOUNT_SHORT[tx.account]||'';
   // Build recurring badge — show instalment progress if limited
   let recBadge='';
   if(tx.recurring){
@@ -1455,7 +1455,7 @@ function qeSubmit(){
   if(p.conf==='high'&&!p.ambiguous){
     // Validate before saving
     const tx={id:gid(),type:p.type,amt:p.amt,cat:p.cat,sub:p.sub,
-      desc:p.desc,date:todayStr(),note:'',account:'bank',
+      desc:p.desc,date:todayStr(),note:'',account:DEFAULT_ACCOUNT[p.type]||'bank',
       recurring:false,freq:'',recurringId:null};
     const errs=validateTx(tx);
     if(errs.length){toast('Hata: '+errs[0],'error');return;}
@@ -2879,7 +2879,7 @@ const S=(()=>{
       document.getElementById('f-desc').value=preDesc||'';
       document.getElementById('f-date').value=todayStr();
       document.getElementById('f-note').value='';
-      document.getElementById('f-account').value='bank';
+      document.getElementById('f-account').value=DEFAULT_ACCOUNT[type]||'bank';
       document.getElementById('f-freq').value='monthly';
       document.getElementById('f-occurrences').value='0';
       document.getElementById('f-occurrences-custom').value='';
@@ -2916,7 +2916,14 @@ const S=(()=>{
       document.getElementById('overlay').classList.add('open');
     },
     close(){ document.getElementById('overlay').classList.remove('open');editId=null; },
-    setType(t){ type=t;updateToggle();buildCatGrid(); },
+    setType(t){
+      const prev=type; type=t;
+      // Only auto-switch while composing a new entry, and only if the user
+      // hasn't already moved off the previous type's default.
+      const accEl=document.getElementById('f-account');
+      if(!editId&&accEl&&accEl.value===(DEFAULT_ACCOUNT[prev]||'bank')) accEl.value=DEFAULT_ACCOUNT[t]||'bank';
+      updateToggle();buildCatGrid();
+    },
     setCat(id){ cat=id;buildCatGrid(); },
     toggleRecurring(){ isRecurring=!isRecurring;updateRecurringUI(); },
     numKey(k){
@@ -3048,6 +3055,11 @@ document.addEventListener('keydown',e=>{
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
+// Build the account picker from ACCOUNTS so renaming an account only needs
+// one edit instead of also touching the markup.
+document.getElementById('f-account').innerHTML=
+  Object.entries(ACCOUNTS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+
 renderHome();
 </script>
 
