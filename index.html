@@ -416,6 +416,79 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .cmp-sub-right{position:relative;display:flex;align-items:baseline;gap:8px;flex-shrink:0}
 .cmp-sub-amt{font-size:13px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
 .cmp-sub-d{font-size:11px;font-weight:800}
+/* ── SAFE TO SPEND + FORECAST ────────────────────── */
+.sts-wrap{margin:12px 14px 0}
+.sts-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.sts-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.sts-card.green::before{background:var(--green)}.sts-card.amber::before{background:var(--amber)}.sts-card.red::before{background:var(--red)}
+.sts-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.sts-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.sts-val{font-size:32px;font-weight:800;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+.sts-card.green .sts-val{color:var(--green)}.sts-card.amber .sts-val{color:var(--amber)}.sts-card.red .sts-val{color:var(--red)}
+.sts-perday{text-align:right;flex-shrink:0;padding-top:2px}
+.sts-perday-val{font-size:17px;font-weight:800;letter-spacing:-.03em;color:var(--text);font-variant-numeric:tabular-nums}
+.sts-perday-lbl{font-size:10px;font-weight:600;color:var(--text3);margin-top:2px}
+.sts-bd{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:12px;padding-top:11px;border-top:1px solid var(--border);font-size:11.5px;font-weight:600;color:var(--text2)}
+.sts-bills{color:var(--amber);cursor:pointer;font-weight:700}
+.sts-fc{display:flex;align-items:flex-start;gap:11px;margin-top:8px;padding:13px 16px;border-radius:var(--r-sm);background:var(--bg2);border:1px solid var(--border)}
+.sts-fc.red{background:var(--red-light);border-color:var(--red-mid)}
+.sts-fc.green{background:var(--green-light);border-color:var(--green-mid)}
+.sts-fc-ico{font-size:17px;line-height:1.3;flex-shrink:0}
+.sts-fc-txt{font-size:12.5px;font-weight:600;color:var(--text2);line-height:1.55}
+.sts-fc-txt b{color:var(--text);font-weight:800}
+.sts-fc-sub{font-size:11.5px;font-weight:600;color:var(--text3);margin-top:3px}
+/* ── ANALYTICS SECTION HEADERS ───────────────────── */
+.an-hdr{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12px;font-weight:800;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.an-hdr-sub{font-size:10.5px;font-weight:600;color:var(--text3);letter-spacing:0;text-transform:none;text-align:right}
+/* ── CALENDAR HEATMAP ────────────────────────────── */
+.cal-dows{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:6px}
+.cal-dows div{font-size:9px;font-weight:700;color:var(--text3);text-align:center;text-transform:uppercase;letter-spacing:.04em}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-cell{aspect-ratio:1;min-width:0;min-height:0;overflow:hidden;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--bg2);border:1px solid transparent;transition:transform .15s,border-color .15s}
+.cal-cell.lvl1{background:#D8F0E7}.cal-cell.lvl2{background:#8FD9C2}.cal-cell.lvl3{background:#00A37A}
+.cal-cell.lvl1,.cal-cell.lvl2{cursor:pointer}.cal-cell.lvl3{cursor:pointer}
+.cal-cell.lvl3 .cal-d,.cal-cell.lvl3 .cal-a{color:#fff}
+.cal-cell.today{border-color:var(--text);border-width:2px}
+.cal-cell:not(.empty):not(.lvl0):active{transform:scale(.9)}
+.cal-d{font-size:10.5px;font-weight:700;color:var(--text2);line-height:1}
+.cal-a{font-size:8px;font-weight:800;color:var(--text2);line-height:1;font-variant-numeric:tabular-nums}
+.cal-legend{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:12px;font-size:9.5px;font-weight:700;color:var(--text3)}
+.cal-legend i{width:13px;height:13px;border-radius:4px;display:inline-block}
+.cal-legend i.lvl0{background:var(--bg2)}.cal-legend i.lvl1{background:#D8F0E7}
+.cal-legend i.lvl2{background:#8FD9C2}.cal-legend i.lvl3{background:#00A37A}
+/* ── TOP MERCHANTS ───────────────────────────────── */
+.mer-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border)}
+.mer-row:last-child{border-bottom:none;padding-bottom:0}
+.mer-icon{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.mer-body{flex:1;min-width:0}
+.mer-name{font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:capitalize}
+.mer-meta{font-size:11px;color:var(--text3);font-weight:600;margin-top:1px}
+.mer-right{text-align:right;flex-shrink:0}
+.mer-amt{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mer-d{font-size:10.5px;font-weight:800;margin-top:1px}
+/* ── NET WORTH TREND ─────────────────────────────── */
+.nw-val{font-size:28px;font-weight:800;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
+.nw-delta{font-size:12px;font-weight:700;margin-top:4px}
+.nw-svg{width:100%;height:76px;margin-top:14px;display:block;overflow:visible}
+.nw-labels{display:flex;justify-content:space-between;margin-top:7px}
+.nw-labels span{font-size:10px;font-weight:700;color:var(--text3)}
+.nw-note{font-size:10.5px;color:var(--text3);line-height:1.5;margin-top:11px;padding-top:11px;border-top:1px solid var(--border)}
+/* ── SUBSCRIPTION SUGGESTIONS ────────────────────── */
+.sub-sug-wrap{margin:0 14px 14px;background:var(--card);border:1px solid var(--amber-light);border-left:4px solid var(--amber);border-radius:var(--r);padding:16px 16px 8px;box-shadow:var(--shadow)}
+.sub-sug-hdr{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--text);margin-bottom:5px}
+.sub-sug-count{background:var(--amber);color:#fff;font-size:11px;font-weight:800;padding:1px 9px;border-radius:99px}
+.sub-sug-note{font-size:11.5px;color:var(--text3);line-height:1.55;margin-bottom:12px}
+.sub-sug{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--border)}
+.sub-sug-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sub-sug-body{flex:1;min-width:0}
+.sub-sug-name{font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub-sug-meta{font-size:11px;color:var(--text3);font-weight:600;margin-top:2px}
+.sub-sug-right{text-align:right;flex-shrink:0}
+.sub-sug-amt{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:5px}
+.sub-sug-acts{display:flex;gap:5px}
+.sub-sug-btn{padding:5px 11px;border-radius:99px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);border:1.5px solid;transition:all .16s}
+.sub-sug-btn.add{background:var(--green);color:var(--on-accent);border-color:var(--green)}
+.sub-sug-btn.skip{background:none;color:var(--text3);border-color:var(--border)}
 /* ── CHOICE SHEET ────────────────────────────────── */
 .ask-title{font-size:19px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px}
 .ask-msg{font-size:13.5px;color:var(--text2);line-height:1.6;margin-bottom:18px}
@@ -800,6 +873,7 @@ function toast(msg,type='success'){
 // Generated instances in TXS carry .recurringId pointing to template.id
 
 let REC_TEMPLATES = DB.load('rec_templates', []);
+let DISMISSED_SUBS = DB.load('dismissed_subs', []);
 function saveTemplates(){ DB.save('rec_templates', REC_TEMPLATES); }
 
 // Add a recurring template when user saves a recurring transaction
@@ -1615,6 +1689,190 @@ function buildAwareness(){
   return {burnRate,savingsRate,budgetUsedPct,monthPct,paceDelta,runway,biggestTx,worstCat,bestCat,inc,exp,net,totalBudget,remainingBudget,remainingDays,dailyBudgetLeft,dayOfMonth,daysInMonth};
 }
 
+// ═══════════════════════════════════════════════════
+// PREMIUM ANALYTICS ENGINE
+// Patterns borrowed from PocketGuard (safe-to-spend), Copilot (recurring
+// detection), Monarch (cash-flow forecast, net worth) and Wealthly (calendar).
+// ═══════════════════════════════════════════════════
+
+// Collapse a description to a merchant-ish key: lowercase, strip digits,
+// punctuation and Turkish case quirks so "Migros 12" and "MIGROS" group together.
+function normDesc(str){
+  return String(str||'')
+    .toLocaleLowerCase('tr')
+    .replace(/[0-9]+/g,' ')
+    .replace(/[^\p{L}\s]/gu,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000);
+}
+function addDays(dstr,n){
+  const d=new Date(dstr+'T12:00:00'); d.setDate(d.getDate()+n);
+  return ds(d.getFullYear(),d.getMonth()+1,d.getDate());
+}
+function lastDayOf(y,m){ return new Date(y,m,0).getDate(); }
+
+// ── Recurring due-dates ──────────────────────────────
+// Scheduled dates for a template inside [from,to]. Used to price the bills that
+// haven't landed yet, which is what makes "safe to spend" honest.
+function recDatesInRange(tmpl,from,to){
+  const out=[];
+  if(tmpl.freq==='monthly'){
+    let y=+from.slice(0,4), m=+from.slice(5,7);
+    for(let i=0;i<14;i++){
+      const dom=Math.min(tmpl.dayOfMonth||1,lastDayOf(y,m));
+      const d=ds(y,m,dom);
+      if(d>=from&&d<=to) out.push(d);
+      if(d>to) break;
+      m++; if(m>12){m=1;y++;}
+    }
+  } else {
+    const step=tmpl.freq==='weekly'?7:1;
+    let d=tmpl.startDate||from;
+    if(d<from){
+      const gap=daysBetween(d,from);
+      d=addDays(d,Math.ceil(gap/step)*step);
+    }
+    let guard=0;
+    while(d<=to&&guard++<400){ out.push(d); d=addDays(d,step); }
+  }
+  return out;
+}
+
+// Expense templates still due between today and month end.
+function upcomingBills(y,m){
+  const today=todayStr();
+  const last=ds(y,m,lastDayOf(y,m));
+  if(last<today) return {total:0,items:[]};
+  let total=0; const items=[];
+  REC_TEMPLATES.filter(r=>r.active&&r.type==='expense').forEach(r=>{
+    const done=new Set(TXS.filter(t=>t.recurringId===r.id).map(t=>t.date));
+    const cap=r.occurrences>0?r.occurrences:Infinity;
+    let made=TXS.filter(t=>t.recurringId===r.id).length;
+    recDatesInRange(r,today,last).forEach(d=>{
+      if(d<=today||done.has(d)||made>=cap) return;
+      made++; total+=r.amt; items.push({tmpl:r,date:d});
+    });
+  });
+  items.sort((a,b)=>a.date.localeCompare(b.date));
+  return {total,items};
+}
+
+// ── Safe to spend (PocketGuard "In My Pocket") ───────
+// What's genuinely free to spend: money in, minus what's already gone, minus
+// the bills you know are still coming.
+function safeToSpend(y,m){
+  const txs=txsFor(y,m);
+  const inc=sumInc(txs), exp=sumExp(txs);
+  const bills=upcomingBills(y,m);
+  const left=inc-exp-bills.total;
+  const isCurrent=(y===CY&&m===CM);
+  const daysLeft=isCurrent?Math.max(lastDayOf(y,m)-new Date().getDate(),0):0;
+  return {
+    left, inc, exp,
+    bills:bills.total, billItems:bills.items,
+    daysLeft,
+    perDay:daysLeft>0?left/daysLeft:left,
+    isCurrent
+  };
+}
+
+// ── Month-end forecast (Monarch cash-flow) ───────────
+// Straight run-rate on elapsed days, plus the bills we already know about.
+function monthForecast(y,m){
+  const txs=txsFor(y,m);
+  const exp=sumExp(txs);
+  const dim=lastDayOf(y,m);
+  const isCurrent=(y===CY&&m===CM);
+  if(!isCurrent) return {projected:exp,exp,dim,dayOfMonth:dim,isCurrent:false,budget:0,overBy:0};
+  const day=new Date().getDate();
+  const bills=upcomingBills(y,m).total;
+  // Variable spend keeps running at today's pace; known bills are added on top.
+  const variable=exp-txsFor(y,m).filter(t=>t.type==='expense'&&t.recurringId).reduce((s,t)=>s+t.amt,0);
+  const projected=exp+(day>0?(variable/day)*(dim-day):0)+bills;
+  const bgt=getBudgetForMonth(y,m);
+  const budget=Object.values(bgt).reduce((s,v)=>s+v,0);
+  return {projected,exp,dim,dayOfMonth:day,isCurrent:true,budget,overBy:budget>0?projected-budget:0};
+}
+
+// ── Subscription detection (Copilot / Rocket Money) ──
+// Look for the same payee recurring on a steady cadence at a steady price.
+// Anything already attached to a template is skipped.
+function detectSubscriptions(){
+  const groups={};
+  TXS.filter(t=>t.type==='expense'&&!t.recurringId).forEach(t=>{
+    const k=normDesc(t.desc);
+    if(k.length<3) return;
+    (groups[k]=groups[k]||[]).push(t);
+  });
+  const known=new Set(REC_TEMPLATES.map(r=>normDesc(r.desc)));
+  const out=[];
+  Object.entries(groups).forEach(([key,list])=>{
+    if(list.length<3||known.has(key)||DISMISSED_SUBS.includes(key)) return;
+    list.sort((a,b)=>a.date.localeCompare(b.date));
+    const gaps=[];
+    for(let i=1;i<list.length;i++) gaps.push(daysBetween(list[i-1].date,list[i].date));
+    const avgGap=gaps.reduce((a,b)=>a+b,0)/gaps.length;
+    const freq = (avgGap>=24&&avgGap<=38)?'monthly'
+               : (avgGap>=5&&avgGap<=9)?'weekly' : null;
+    if(!freq) return;
+    // Cadence must be consistent, not just right on average.
+    if(gaps.some(g=>Math.abs(g-avgGap)>avgGap*0.45)) return;
+    const amts=list.map(t=>t.amt);
+    const avgAmt=amts.reduce((a,b)=>a+b,0)/amts.length;
+    if(avgAmt<=0) return;
+    if((Math.max(...amts)-Math.min(...amts))/avgAmt>0.35) return;
+    const last=list[list.length-1];
+    out.push({key,list,count:list.length,avgAmt,freq,last,
+              yearly:avgAmt*(freq==='monthly'?12:52)});
+  });
+  return out.sort((a,b)=>b.yearly-a.yearly);
+}
+
+// ── Daily spend, for the calendar heatmap (Wealthly) ─
+function dailySpend(y,m){
+  const map={};
+  TXS.filter(t=>t.type==='expense'&&t.date.startsWith(mStr(y,m)))
+     .forEach(t=>{ const d=+t.date.slice(8,10); map[d]=(map[d]||0)+t.amt; });
+  return map;
+}
+
+// ── Top merchants, with change vs the previous month ─
+function topMerchants(y,m,n){
+  let pm=m-1,py=y; if(pm<1){pm=12;py--;}
+  const roll=(yy,mm)=>{
+    const acc={};
+    TXS.filter(t=>t.type==='expense'&&t.date.startsWith(mStr(yy,mm))).forEach(t=>{
+      const k=normDesc(t.desc)||'(adsız)';
+      if(!acc[k]) acc[k]={key:k,label:t.desc||'(adsız)',amt:0,count:0,cat:t.cat};
+      acc[k].amt+=t.amt; acc[k].count++;
+    });
+    return acc;
+  };
+  const cur=roll(y,m), prev=roll(py,pm);
+  return Object.values(cur)
+    .map(o=>({...o, prev:prev[o.key]?prev[o.key].amt:0}))
+    .sort((a,b)=>b.amt-a.amt)
+    .slice(0,n||6);
+}
+
+// ── Net worth over time (Monarch / Copilot) ──────────
+// Starting balances plus every transaction up to the end of each month.
+function netWorthSeries(n,endY,endM){
+  const base=Object.values(ACCOUNT_INIT_BALANCES).reduce((s,v)=>s+(+v||0),0);
+  const out=[];
+  for(let i=n-1;i>=0;i--){
+    let m=endM-i,y=endY; while(m<1){m+=12;y--;}
+    const end=ds(y,m,lastDayOf(y,m));
+    const net=TXS.filter(t=>t.date<=end)
+                 .reduce((s,t)=>s+(t.type==='income'?t.amt:-t.amt),0);
+    out.push({y,m,label:mShort(m),val:base+net});
+  }
+  return out;
+}
+
 function renderAwarenessGrid(){
   const a=buildAwareness();
   const cards=[];
@@ -1671,6 +1929,8 @@ function renderAwarenessGrid(){
 // ═══════════════════════════════════════════════════
 function renderHome(){
   const txs=txsFor(CY,CM), inc=sumInc(txs), exp=sumExp(txs), net=inc-exp;
+  const sts=safeToSpend(CY,CM);
+  const fc=monthForecast(CY,CM);
   const todayTxs=TXS.filter(t=>t.date===todayStr());
   const todayExp=sumExp(todayTxs);
   const sr=inc>0?Math.round((net/inc)*100):0;
@@ -1690,6 +1950,41 @@ function renderHome(){
 
   // Account balance section
   const accEntries=Object.entries(ACCOUNTS);
+  // ── Safe to spend + month-end forecast ──────────────
+  // The single figure people actually want: what's left after the bills that
+  // haven't hit yet. Shown only for the live month, where it means something.
+  const stsTone = sts.left<0 ? 'red' : (sts.perDay < (fc.exp/Math.max(fc.dayOfMonth,1))*0.6 ? 'amber' : 'green');
+  const fcTone  = fc.budget>0 ? (fc.overBy>0?'red':'green') : 'blue';
+  const stsHTML = sts.isCurrent ? `
+    <div class="sts-wrap">
+      <div class="sts-card ${stsTone}">
+        <div class="sts-head">
+          <div>
+            <div class="sts-label">Harcanabilir</div>
+            <div class="sts-val">${sts.left<0?'−':''}${fmt(sts.left)}</div>
+          </div>
+          ${sts.daysLeft>0?`<div class="sts-perday">
+            <div class="sts-perday-val">${sts.left<0?'−':''}${fmt(Math.abs(sts.perDay))}</div>
+            <div class="sts-perday-lbl">günlük · ${sts.daysLeft} gün</div>
+          </div>`:''}
+        </div>
+        <div class="sts-bd">
+          <span>${fmt(sts.inc)} gelir</span>
+          <span>−${fmt(sts.exp)} harcandı</span>
+          ${sts.bills>0?`<span class="sts-bills" onclick="showBillsSheet()">−${fmt(sts.bills)} yaklaşan fatura ›</span>`:''}
+        </div>
+      </div>
+      ${fc.dayOfMonth>=5?`<div class="sts-fc ${fcTone}">
+        <span class="sts-fc-ico">🔮</span>
+        <div class="sts-fc-body">
+          <div class="sts-fc-txt">Bu hızla ay sonunda <b>${fmt(fc.projected)}</b> harcamış olacaksın</div>
+          ${fc.budget>0?`<div class="sts-fc-sub">${fc.overBy>0
+              ? `Bütçeyi <b style="color:var(--red)">${fmt(fc.overBy)}</b> aşıyor`
+              : `Bütçenin <b style="color:var(--green)">${fmt(-fc.overBy)}</b> altında`}</div>`:''}
+        </div>
+      </div>`:''}
+    </div>` : '';
+
   const accBalHTML=`<div style="padding:0 0 4px">
     <div style="padding:4px 16px 10px;font-size:15px;font-weight:800;letter-spacing:-.02em">Hesap Bakiyeleri</div>
     <div class="acc-grid">
@@ -1735,6 +2030,8 @@ function renderHome(){
         <div class="hs"><div class="hs-label">Bugün</div><div class="hs-val" style="color:var(--hero-text2)">${todayExp>0?'−'+fmt(todayExp):'₺0'}</div></div>
       </div>
     </div>
+
+    ${stsHTML}
 
     <div class="quick-entry">
       <div class="qe-wrap">
@@ -1934,6 +2231,82 @@ function renderStats(){
   const bgtSnap=getBudgetForMonth(smY,smM);
   const catRows=catItems.map(it=>{const bgt=bgtSnap[it.id]||0,over=bgt>0&&it.amt>bgt,pct=bgt>0?Math.min(it.amt/bgt*100,100):0;return `<div class="cat-spend-item" style="cursor:pointer" onclick="showCatTxSheet('${it.id}',${smY},${smM})"><div class="csi-icon" style="background:${it.cat.bg}">${it.cat.icon}</div><div class="csi-body"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><div><div class="csi-name">${escapeHTML(it.cat.name)}</div><div style="font-size:10px;font-weight:700;color:var(--text3)">%${it.pct} harcama</div></div><div class="csi-right"><div class="csi-amt">−${fmt(it.amt)}</div>${bgt>0?`<div class="csi-bgt">/ ${fmt(bgt)}</div>`:''}<div style="font-size:10px;color:var(--text3);margin-top:3px">›</div></div></div>${bgt>0?`<div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${over?'var(--red)':it.cat.color}"></div></div>`:''}</div></div>`;}).join('');
 
+  // ── Calendar heatmap (Wealthly / CalendarBudget) ────
+  const spendMap=dailySpend(smY,smM);
+  const dim=lastDayOf(smY,smM);
+  const maxDay=Math.max(...Object.values(spendMap),0);
+  // Monday-first grid, matching the Turkish calendar convention.
+  const firstDow=(new Date(smY,smM-1,1).getDay()+6)%7;
+  const todayD=(smY===CY&&smM===CM)?new Date().getDate():-1;
+  let cells='';
+  for(let d=1;d<=dim;d++){
+    const amt=spendMap[d]||0;
+    const ratio=maxDay>0?amt/maxDay:0;
+    // Four buckets read more clearly than a continuous ramp at this size.
+    const lvl=amt===0?0:ratio>0.66?3:ratio>0.33?2:1;
+    cells+=`<div class="cal-cell lvl${lvl}${d===todayD?' today':''}" ${d===1?`style="grid-column-start:${firstDow+1}"`:''} ${amt>0?`onclick="showDaySheet('${ds(smY,smM,d)}')"`:''} title="${amt>0?fmt(amt):'harcama yok'}">
+      <span class="cal-d">${d}</span>${amt>0?`<span class="cal-a">${Math.round(amt/1000)>0?Math.round(amt/1000)+'B':'‹1B'}</span>`:''}
+    </div>`;
+  }
+  const busiest=Object.entries(spendMap).sort((a,b)=>b[1]-a[1])[0];
+  const calHTML=`<div style="padding:0 14px;margin-bottom:14px"><div class="card" style="padding:18px">
+    <div class="an-hdr">Harcama Takvimi<span class="an-hdr-sub">${busiest?`En yoğun: ${busiest[0]} ${mShort(smM)} · ${fmt(busiest[1])}`:'veri yok'}</span></div>
+    <div class="cal-dows">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(d=>`<div>${d}</div>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend"><span>Az</span><i class="lvl0"></i><i class="lvl1"></i><i class="lvl2"></i><i class="lvl3"></i><span>Çok</span></div>
+  </div></div>`;
+
+  // ── Top merchants (MoneyPatrol-style payee analysis) ─
+  const merch=topMerchants(smY,smM,6);
+  const merchHTML=merch.length?`<div style="padding:0 14px;margin-bottom:14px"><div class="card" style="padding:18px">
+    <div class="an-hdr">En Çok Harcadığın Yerler<span class="an-hdr-sub">${mName(smM)}</span></div>
+    ${merch.map(mo=>{
+      const d=mo.prev>0?Math.round((mo.amt-mo.prev)/mo.prev*100):null;
+      const mc=gc(mo.cat);
+      return `<div class="mer-row">
+        <div class="mer-icon" style="background:${mc.bg}">${mc.icon}</div>
+        <div class="mer-body">
+          <div class="mer-name">${escapeHTML(mo.label)}</div>
+          <div class="mer-meta">${mo.count} işlem${mo.prev>0?` · geçen ay ${fmt(mo.prev)}`:' · ilk kez'}</div>
+        </div>
+        <div class="mer-right">
+          <div class="mer-amt">${fmt(mo.amt)}</div>
+          ${d!==null&&d!==0?`<div class="mer-d" style="color:${d>0?'var(--red)':'var(--green)'}">${d>0?'↑':'↓'}%${Math.abs(d)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div></div>`:'';
+
+  // ── Net worth trend (Monarch / Copilot) ─────────────
+  const nw=netWorthSeries(6,smY,smM);
+  const nwMin=Math.min(...nw.map(o=>o.val)), nwMax=Math.max(...nw.map(o=>o.val));
+  const nwRange=(nwMax-nwMin)||1;
+  const nwW=300, nwH=70;
+  const nwPts=nw.map((o,i)=>{
+    const x=(i/(nw.length-1||1))*nwW;
+    const y=nwH-((o.val-nwMin)/nwRange)*nwH;
+    return [x,y];
+  });
+  const nwLine=nwPts.map((pt,i)=>(i?'L':'M')+pt[0].toFixed(1)+' '+pt[1].toFixed(1)).join(' ');
+  const nwArea=`${nwLine} L${nwW} ${nwH} L0 ${nwH} Z`;
+  const nwNow=nw[nw.length-1].val, nwThen=nw[0].val;
+  const nwDelta=nwNow-nwThen;
+  const nwHTML=`<div style="padding:0 14px;margin-bottom:14px"><div class="card" style="padding:18px">
+    <div class="an-hdr">Net Varlık<span class="an-hdr-sub">son 6 ay</span></div>
+    <div class="nw-val">${nwNow<0?'−':''}${fmt(nwNow)}</div>
+    <div class="nw-delta" style="color:${nwDelta>=0?'var(--green)':'var(--red)'}">${nwDelta>=0?'↑':'↓'} ${fmt(nwDelta)} bu dönemde</div>
+    <svg viewBox="0 0 ${nwW} ${nwH}" preserveAspectRatio="none" class="nw-svg">
+      <defs><linearGradient id="nwg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--green)" stop-opacity=".28"/>
+        <stop offset="100%" stop-color="var(--green)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path d="${nwArea}" fill="url(#nwg)"/>
+      <path d="${nwLine}" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="nw-labels">${nw.map(o=>`<span>${o.label}</span>`).join('')}</div>
+    <div class="nw-note">Başlangıç bakiyeleri + tüm işlemler. Hesap bakiyelerini ana sayfadan güncelleyebilirsin.</div>
+  </div></div>`;
+
   const el=document.getElementById('pg-stats');
   el.innerHTML=`
     <div class="pg-hdr"><div class="pg-title">Analiz</div></div>
@@ -1957,6 +2330,9 @@ function renderStats(){
     </div>
     ${catItems.length?`<div style="padding:0 14px;margin-bottom:14px"><div class="card" style="padding:20px"><div style="font-size:12px;font-weight:800;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px">Harcama Dağılımı</div><div class="donut-wrap">${donutSVG}<div class="donut-legend">${legendHTML}</div></div></div></div>`:''}
     <div style="padding:0 14px;margin-bottom:14px"><div class="card" style="padding:20px"><div style="font-size:12px;font-weight:800;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px">6 Aylık Trend</div><svg width="100%" viewBox="0 0 ${svgW} ${h+4}" style="overflow:visible;display:block">${bars}</svg><div class="trend-labels" style="gap:${bgap}px">${trendLabels}</div><div class="trend-legend"><div class="tl-item"><div class="tl-dot" style="background:var(--green)"></div>Gelir</div><div class="tl-item"><div class="tl-dot" style="background:var(--red)"></div>Gider</div><div style="flex:1"></div><div style="font-size:10px;font-weight:700;color:var(--text3)">Parlak = seçili ay</div></div></div></div>
+    ${calHTML}
+    ${merchHTML}
+    ${nwHTML}
     <div style="padding:0 14px 6px;font-size:15px;font-weight:800;letter-spacing:-.02em">Kategoriye Göre</div>
     ${catRows||`<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">Veri yok</div><div class="empty-msg">Analiz için işlem ekleyin.</div></div>`}
     <div style="height:16px"></div>`;
@@ -2097,6 +2473,75 @@ function renderCatSheet(){
     <div style="height:8px"></div>`;
 }
 function closeCatTxSheet(){document.getElementById('cat-tx-overlay').classList.remove('open');}
+
+// ── Upcoming bills sheet (reuses the category sheet shell) ──
+function showDaySheet(dstr){
+  const list=TXS.filter(t=>t.date===dstr).sort((a,b)=>b.amt-a.amt);
+  const exp=list.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amt,0);
+  document.getElementById('cat-tx-title').innerHTML=
+    `<span style="margin-right:9px">📅</span>${new Date(dstr+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}`;
+  document.getElementById('cat-tx-body').innerHTML=
+    `<div class="cmp-stats" style="grid-template-columns:repeat(2,1fr);margin-top:0">
+       <div class="cmp-stat"><div class="cmp-lbl">Gider</div><div class="cmp-val" style="color:var(--red)">${fmt(exp)}</div></div>
+       <div class="cmp-stat"><div class="cmp-lbl">İşlem</div><div class="cmp-val">${list.length}</div></div>
+     </div>`+
+    list.map(t=>{const c=gc(t.cat);return `<div class="tx-item" style="margin:0 0 6px;cursor:pointer" onclick="S.open('${t.id}');closeCatTxSheet()">
+      <div class="tx-icon" style="background:${c.bg}">${c.icon}</div>
+      <div class="tx-body"><div class="tx-name">${escapeHTML(t.desc||t.sub||c.name)}</div>
+      <div class="tx-meta">${escapeHTML(c.name)}${t.sub?' · '+escapeHTML(t.sub):''}</div></div>
+      <div class="tx-amount ${t.type==='expense'?'exp':'inc'}">${t.type==='expense'?'−':'+'}${fmt(t.amt)}</div>
+    </div>`;}).join('')+'<div style="height:8px"></div>';
+  document.getElementById('cat-tx-overlay').classList.add('open');
+}
+
+function showBillsSheet(){
+  const sts=safeToSpend(CY,CM);
+  document.getElementById('cat-tx-title').innerHTML='<span style="margin-right:9px">🧾</span>Yaklaşan Faturalar';
+  const rows=sts.billItems.map(it=>{
+    const c=gc(it.tmpl.cat);
+    const inDays=daysBetween(todayStr(),it.date);
+    return `<div class="tx-item" style="margin:0 0 6px">
+      <div class="tx-icon" style="background:${c.bg}">${c.icon}</div>
+      <div class="tx-body">
+        <div class="tx-name">${escapeHTML(it.tmpl.desc||c.name)}</div>
+        <div class="tx-meta">${fmtD(it.date)}<span class="tx-meta-dot"></span>${inDays===0?'bugün':inDays+' gün sonra'}</div>
+      </div>
+      <div class="tx-amount exp">−${fmt(it.tmpl.amt)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('cat-tx-body').innerHTML=
+    `<div class="cmp-note" style="margin-bottom:14px">Ay sonuna kadar düzenli işlemlerinden <b>${fmt(sts.bills)}</b> daha çıkacak. Harcanabilir tutar bu faturalar düşülerek hesaplanıyor.</div>`+
+    (rows||`<div class="empty" style="padding:30px 20px"><div class="empty-icon">✅</div><div class="empty-title">Bu ay başka fatura yok</div></div>`)+
+    '<div style="height:8px"></div>';
+  document.getElementById('cat-tx-overlay').classList.add('open');
+}
+
+// ── Convert a detected subscription into a real recurring template ──
+async function adoptSubscription(key){
+  const sub=detectSubscriptions().find(x=>x.key===key);
+  if(!sub){ toast('Öneri artık geçerli değil','warn'); return; }
+  const ok=await askChoice({
+    title:'Düzenli işlem olarak ekle',
+    msg:`"${sub.last.desc}" son ${sub.count} ayda düzenli olarak ${fmt(sub.avgAmt)} tutarında görünüyor. Şablon olarak eklenirse ileri tarihli kayıtlar otomatik oluşturulur.`,
+    choices:[{label:'Şablon oluştur',value:'go',hint:`${sub.freq==='monthly'?'Aylık':'Haftalık'} · ${fmt(sub.avgAmt)}`,tone:'primary'}]
+  });
+  if(ok!=='go') return;
+  const t=sub.last;
+  const rid=gid();
+  // Attach the most recent occurrence to the new series so the generator
+  // continues from it instead of duplicating this month.
+  TXS=TXS.map(x=>x.id===t.id?{...x,recurring:true,recurringId:rid,freq:sub.freq,occurrences:0}:x);
+  upsertTemplate({...t,amt:Math.round(sub.avgAmt),recurring:true,recurringId:rid,freq:sub.freq,occurrences:0});
+  saveTxs(); processRecurring(); saveTxs();
+  toast('Düzenli işlem oluşturuldu');
+  renderRec();
+}
+function dismissSubscription(key){
+  DISMISSED_SUBS.push(key);
+  try{ DB.save('dismissed_subs',DISMISSED_SUBS); }catch(e){}
+  renderRec();
+  toast('Öneri gizlendi','warn');
+}
 
 // ═══════════════════════════════════════════════════
 // CHOICE SHEET — replaces native confirm()
@@ -2337,9 +2782,40 @@ async function deleteTemplate(tmplId){
   toast('Düzenli işlem silindi','error');
 }
 
+function subSuggestionsHTML(){
+  const found=detectSubscriptions().slice(0,5);
+  if(!found.length) return '';
+  const cards=found.map(sb=>{
+    const c=gc(sb.last.cat);
+    return `<div class="sub-sug">
+      <div class="sub-sug-icon" style="background:${c.bg}">${c.icon}</div>
+      <div class="sub-sug-body">
+        <div class="sub-sug-name">${escapeHTML(sb.last.desc||c.name)}</div>
+        <div class="sub-sug-meta">${sb.count} kez · ${sb.freq==='monthly'?'aylık':'haftalık'} · yılda ~${fmt(sb.yearly)}</div>
+      </div>
+      <div class="sub-sug-right">
+        <div class="sub-sug-amt">${fmt(sb.avgAmt)}</div>
+        <div class="sub-sug-acts">
+          <button class="sub-sug-btn add" onclick="adoptSubscription('${sb.key.replace(/'/g,"\\'")}')">+ Ekle</button>
+          <button class="sub-sug-btn skip" onclick="dismissSubscription('${sb.key.replace(/'/g,"\\'")}')">Gizle</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="sub-sug-wrap">
+    <div class="sub-sug-hdr">
+      <span>🔍 Tespit edilen abonelikler</span>
+      <span class="sub-sug-count">${found.length}</span>
+    </div>
+    <div class="sub-sug-note">Bu harcamalar düzenli bir sıklıkta tekrar ediyor ama henüz şablona bağlı değil.</div>
+    ${cards}
+  </div>`;
+}
+
 function renderRec(){
   const el=document.getElementById('pg-rec');
   const freqLabel={monthly:'Aylık',weekly:'Haftalık',daily:'Günlük'};
+  const sugHTML=subSuggestionsHTML();
 
   if(!REC_TEMPLATES.length){
     el.innerHTML=`
@@ -2352,6 +2828,7 @@ function renderRec(){
           <button class="backup-btn danger" onclick="resetAllData()" style="font-size:12px">🗑 Sıfırla</button>
         </div>
       </div>
+      ${sugHTML}
       <div class="empty">
         <div class="empty-icon">🔄</div>
         <div class="empty-title">Henüz düzenli işlem yok</div>
@@ -2490,6 +2967,7 @@ function renderRec(){
       ${totalIncome?`<div class="scard"><div class="scard-label">Aylık Gelir</div><div class="scard-val" style="color:var(--green)">${fmt(totalIncome)}</div></div>`:''}
     </div>`:''}
 
+    ${sugHTML}
     ${activeHTML}
     ${inactiveHTML}
     <div style="height:16px"></div>`;
